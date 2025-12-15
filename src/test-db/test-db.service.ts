@@ -1,5 +1,5 @@
-import { Injectable } from '@nestjs/common';
-import { PutCommand } from '@aws-sdk/lib-dynamodb';
+import { Body, Injectable } from '@nestjs/common';
+import { PutCommand, ScanCommand } from '@aws-sdk/lib-dynamodb';
 import { DynomodbService } from '../common/dynomodb/dynomodb.service';
 
 @Injectable()
@@ -24,5 +24,28 @@ export class TestDbService {
     );
 
     return item;
+  }
+
+  async getAllTestItem() {
+    const result = await this.db.client.send(
+      new ScanCommand({
+        TableName: this.table,
+      }),
+    );
+
+    return result.Items;
+  }
+
+  async updateTestItem(
+    @Body() body: { PK: string; SK: string; message: string },
+  ) {
+    await this.db.client.send(
+      new PutCommand({
+        TableName: this.table,
+        Item: body,
+      }),
+    );
+
+    return body;
   }
 }
