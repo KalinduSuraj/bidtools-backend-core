@@ -4,6 +4,9 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { DynomodbModule } from './common/dynomodb/dynomodb.module';
 import { TestDbModule } from './test-db/test-db.module';
+import { NotificationsModule } from './notifications/notifications.module';
+import { EmailsModule } from './emails/emails.module';
+import { EmailsService } from './emails/emails.service';
 
 @Module({
   imports: [
@@ -13,8 +16,10 @@ import { TestDbModule } from './test-db/test-db.module';
     }),
     DynomodbModule,
     TestDbModule,
+    EmailsModule,
+    NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, EmailsService],
 })
 export class AppModule {}
