@@ -1,10 +1,15 @@
-import { IsString, IsNotEmpty, IsEmpty } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmpty, IsOptional, IsBoolean } from 'class-validator';
 
 export class CreateNotificationDto {
 
   @IsString()
   @IsEmpty()
-  id:string;
+  notification_id:string;
+
+  @IsString()
+  @IsEmpty()
+  user_id:string;
+
 
   @IsString()
   @IsNotEmpty()
@@ -12,9 +17,9 @@ export class CreateNotificationDto {
 
   @IsString()
   @IsNotEmpty()
-  message:string;
+  content:string;
 
-  @IsString()
-  @IsNotEmpty()
-  userId:string;
+  @IsOptional()
+  @IsBoolean()
+  is_read?: boolean;
 }

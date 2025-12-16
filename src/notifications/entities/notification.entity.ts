@@ -1,6 +1,8 @@
 export class Notification {
-    id:string;
+    notification_id:string;
+    user_id:string;
     type:string;
-    message:string;
-    userId:string;
+    content:string;
+    is_read:boolean;
+    created_at:Date;
 }
