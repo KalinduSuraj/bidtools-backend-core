@@ -20,6 +20,6 @@ import { EmailsService } from './emails/emails.service';
     NotificationsModule,
   ],
   controllers: [AppController],
-  providers: [AppService, EmailsService],
+  providers: [AppService],
 })
 export class AppModule {}

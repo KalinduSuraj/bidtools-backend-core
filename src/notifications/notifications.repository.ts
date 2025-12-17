@@ -2,7 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { DynomodbService } from '../common/dynomodb/dynomodb.service';
 import { Notification } from './entities/notification.entity';
 // Import QueryCommand here
-import { PutCommand, QueryCommand, GetCommand, DeleteCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  PutCommand,
+  QueryCommand,
+  GetCommand,
+  DeleteCommand,
+} from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
 export class NotificationsRepository {
@@ -15,9 +20,8 @@ export class NotificationsRepository {
       TableName: this.tableName,
       Item: {
         PK: 'NOTIFICATION',
-        SK: `ITEM#${Date.now()}`,
+        SK: `ITEM#${notification.notification_id}`,
         ...notification,
-        createdAt: new Date().toISOString(),
       },
     });
 
@@ -27,18 +31,15 @@ export class NotificationsRepository {
   async getAllNotification() {
     const command = new QueryCommand({
       TableName: this.tableName,
-      // We only look for items where PK matches 'NOTIFICATION'
       KeyConditionExpression: 'PK = :pk',
       ExpressionAttributeValues: {
         ':pk': 'NOTIFICATION',
       },
-      // Optional: Set to false to show newest notifications first (descending order)
       ScanIndexForward: false,
     });
 
     const result = await this.db.client.send(command);
 
-    // Return the items or an empty array if none found
     return (result.Items || []) as Notification[];
   }
 
@@ -60,8 +61,8 @@ export class NotificationsRepository {
     const command = new DeleteCommand({
       TableName: this.tableName,
       Key: {
-        PK: 'NOTIFICATION',           // Must match the PK
-        SK: `ITEM#${notificationId}`, // Must match the SK
+        PK: 'NOTIFICATION',
+        SK: `ITEM#${notificationId}`,
       },
     });
 
@@ -74,8 +75,7 @@ export class NotificationsRepository {
         PK: 'NOTIFICATION',
         SK: `ITEM#${notification.notification_id}`,
         ...notification,
-        // Optional: Update an 'updatedAt' field if you have one
-        updatedAt: new Date().toISOString(), 
+        updatedAt: new Date().toISOString(),
       },
     });
 

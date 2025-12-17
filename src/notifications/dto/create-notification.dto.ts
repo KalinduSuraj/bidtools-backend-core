@@ -1,23 +1,19 @@
-import { IsString, IsNotEmpty, IsEmpty, IsOptional, IsBoolean } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsEmpty,
+  IsOptional,
+  IsBoolean,
+} from 'class-validator';
 
 export class CreateNotificationDto {
-
   @IsString()
-  @IsEmpty()
-  notification_id:string;
-
-  @IsString()
-  @IsEmpty()
-  user_id:string;
-
+  @IsNotEmpty()
+  targetEmail: string;
 
   @IsString()
   @IsNotEmpty()
-  type:string;
-
-  @IsString()
-  @IsNotEmpty()
-  content:string;
+  message: string;
 
   @IsOptional()
   @IsBoolean()

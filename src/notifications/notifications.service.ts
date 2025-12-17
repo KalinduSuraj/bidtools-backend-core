@@ -6,8 +6,6 @@ import { EmailsService } from 'src/emails/emails.service';
 import { NotificationsRepository } from './notifications.repository';
 @Injectable()
 export class NotificationsService {
-  private notifications: Notification[] = [];
-
   constructor(
     private readonly emailsService: EmailsService,
     private readonly notificationsRepository: NotificationsRepository,
@@ -17,23 +15,28 @@ export class NotificationsService {
   async createNotification(
     createNotificationDto: CreateNotificationDto,
   ): Promise<Notification> {
+    const { targetEmail, ...notificationData } = createNotificationDto;
+
+    const notificationId = `notif_${Date.now()}`;
+
     const newNotification: Notification = {
-      ...createNotificationDto,
+      ...notificationData,
+      notification_id: notificationId,
+      user_id: 'user_001',
       is_read: false,
-      created_at: new Date(),
+      created_at: new Date().toISOString(),
     };
     await this.notificationsRepository.saveNotification(newNotification);
     await this.emailsService.createEmail({
-      to: 'mchanuka72@gmail.com', // need to get for specific user
+      to: targetEmail || 'test@gmail.com',
       subject: 'New Notification Received',
-      body: `You have a new notification: ${createNotificationDto.content || 'No content'}`,
+      body: `You have a new notification: ${createNotificationDto.message || 'No content'}`,
       from: process.env.FROM_EMAIL || 'noreply@bidtools.com',
     });
     return newNotification;
   }
 
   //done for now
-
   async getAllNotification(): Promise<Notification[]> {
     return this.notificationsRepository.getAllNotification();
   }

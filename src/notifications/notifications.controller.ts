@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Put,
+  Query,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -25,13 +26,13 @@ export class NotificationsController {
   }
 
   @Get()
-  async findAll(): Promise<Notification[]> {
+  async findAll(
+    @Query('id') id?: string,
+  ): Promise<Notification | Notification[]> {
+    if (id) {
+      return this.notificationsService.getNotificationById(id);
+    }
     return this.notificationsService.getAllNotification();
-  }
-
-  @Get(':id')
-  async findOne(@Param('id') id: string): Promise<Notification> {
-    return this.notificationsService.getNotificationById(id);
   }
 
   @Put(':id')
