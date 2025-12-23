@@ -3,10 +3,11 @@ import { PaymentService } from './payment.service';
 import { PaymentController } from './payment.controller';
 import { PaymentRepository } from './payment.repository';
 import { DynomodbModule } from '../common/dynomodb/dynomodb.module';
+import { GatewayProvider } from './providers/gateway.provider';
 
 @Module({
-  imports:[DynomodbModule],
+  imports: [DynomodbModule],
   controllers: [PaymentController],
-  providers: [PaymentService,PaymentRepository],
+  providers: [PaymentService, PaymentRepository, GatewayProvider],
 })
 export class PaymentModule {}

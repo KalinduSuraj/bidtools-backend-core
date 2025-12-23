@@ -1,7 +1,11 @@
 export class Payment {
-  id: string;
+  payment_id: string;
+  rental_id: number;
   amount: number;
+  currency: string;
+  method: string;
   status: 'PENDING' | 'SUCCESS' | 'FAILED';
-  transactionId: string;
-  createdAt: Date;
+  transaction_reference?: string;
+  created_at: Date;
+  is_deleted: boolean;
 }

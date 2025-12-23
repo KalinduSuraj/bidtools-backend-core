@@ -9,12 +9,12 @@ export class DynomodbService {
   constructor() {
     const client = new DynamoDBClient({
       region: process.env.AWS_REGION,
-      endpoint:'http://127.0.0.1:3001',
+      // endpoint:'http://127.0.0.1:3001',
       credentials: {
-        // accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-        // secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
-        accessKeyId: "fake",
-        secretAccessKey: "fake",
+        accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+        // accessKeyId: "fake",
+        // secretAccessKey: "fake",
       },
     });
 
