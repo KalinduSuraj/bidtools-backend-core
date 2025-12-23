@@ -19,6 +19,7 @@ export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
   @Post()
+  @Header('Content-Type', 'text/html')
   create(@Body() createPaymentDto: CreatePaymentDto) {
     return this.paymentService.placePayment(createPaymentDto);
   }

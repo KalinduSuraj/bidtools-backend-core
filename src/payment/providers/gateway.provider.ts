@@ -3,8 +3,8 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class GatewayProvider {
-  private merchantId = process.env.PAYHERE_MERCHANT_ID!;
-  private merchantSecret = process.env.PAYHERE_SECRET!;
+  private merchantId = process.env.PAYHERE_MERCHANT_ID!.trim();
+  private merchantSecret = process.env.PAYHERE_SECRET!.trim();
 
   generateHash(
     orderId: string,

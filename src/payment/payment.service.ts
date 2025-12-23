@@ -41,26 +41,38 @@ export class PaymentService {
       currency || 'LKR',
     );
 
-    // 5. Return Data for Frontend
-    return {
-      sandbox: true,
-      merchant_id: process.env.PAYHERE_MERCHANT_ID,
-      return_url: process.env.PAYHERE_RETURN_URL,
-      cancel_url: process.env.PAYHERE_CANCEL_URL,
-      notify_url: process.env.PAYHERE_NOTIFY_URL,
-      order_id: orderId,
-      items: `Rental Payment #${rental_id}`,
-      amount: amount.toFixed(2),
-      currency: currency || 'LKR',
-      hash: hash,
-      // first_name: 'Saman',
-      // last_name: 'Perera',
-      // email: 'samanp@gmail.com',
-      // phone: '0771234567',
-      // address: 'No.1, Galle Road',
-      // city: 'Colombo',
-      // country: 'Sri Lanka',
-    };
+    const payhereUrl = 'https://sandbox.payhere.lk/pay/checkout';
+
+    const redirectHtml = `
+      <html>
+      <head>
+        <title>Redirecting to PayHere...</title>
+      </head>
+      <body onload="document.forms[0].submit()">
+        <p>Redirecting to Payment Gateway...</p>
+        <form method="post" action="${payhereUrl}">
+          <input type="hidden" name="merchant_id" value="${process.env.PAYHERE_MERCHANT_ID}">
+          <input type="hidden" name="return_url" value="${process.env.PAYHERE_RETURN_URL}">
+          <input type="hidden" name="cancel_url" value="${process.env.PAYHERE_CANCEL_URL}">
+          <input type="hidden" name="notify_url" value="${process.env.PAYHERE_NOTIFY_URL}">
+          <input type="hidden" name="order_id" value="${orderId}">
+          <input type="hidden" name="items" value="Rental Payment #${rental_id}">
+          <input type="hidden" name="currency" value="${currency || 'LKR'}">
+          <input type="hidden" name="amount" value="${amount.toFixed(2)}">
+          <input type="hidden" name="first_name" value="Saman">
+          <input type="hidden" name="last_name" value="Perera">
+          <input type="hidden" name="email" value="samanp@gmail.com">
+          <input type="hidden" name="phone" value="0771234567">
+          <input type="hidden" name="address" value="No.1, Galle Road">
+          <input type="hidden" name="city" value="Colombo">
+          <input type="hidden" name="country" value="Sri Lanka">
+          <input type="hidden" name="hash" value="${hash}">
+        </form>
+      </body>
+      </html>
+    `;
+
+    return redirectHtml;
   }
 
   getAllPayments(): Promise<Payment[]> {
@@ -91,7 +103,6 @@ export class PaymentService {
   }
 
   async processNotification(data: any) {
-
     // 1. Validate the Signature
     const isValid = this.gatewayProvider.validatePayment(data);
     if (!isValid) {
@@ -115,7 +126,6 @@ export class PaymentService {
 
     payment.status = status;
     await this.paymentRepository.updatePaymentDetails(payment);
-    console.log(`Payment ${paymentId} updated to ${status}`);
   }
 
   deletePayment(id: string) {
