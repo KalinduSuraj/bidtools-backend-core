@@ -4,6 +4,7 @@ import { CreateNotificationDto } from './dto/create-notification.dto';
 import { Notification } from './entities/notification.entity';
 import { EmailsService } from '../emails/emails.service';
 import { NotificationsRepository } from './notifications.repository';
+import { v4 as uuid } from 'uuid';
 @Injectable()
 export class NotificationsService {
   constructor(
@@ -17,12 +18,12 @@ export class NotificationsService {
   ): Promise<Notification> {
     const { targetEmail, ...notificationData } = createNotificationDto;
 
-    const notificationId = `notif_${Date.now()}`;
+    const notificationId = uuid();
 
     const newNotification: Notification = {
       ...notificationData,
       notification_id: notificationId,
-      user_id: 'user_001',
+      user_id: uuid(),
       is_read: false,
       created_at: new Date().toISOString(),
     };

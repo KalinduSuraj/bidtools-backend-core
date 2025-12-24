@@ -59,7 +59,7 @@ describe('NotificationsService', () => {
       expect(repository.saveNotification).toHaveBeenCalledWith(
         expect.objectContaining({
           message: 'Test message',
-          user_id: 'user_001',
+          user_id: expect.any(String),
           is_read: false,
         }),
       );

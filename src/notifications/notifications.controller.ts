@@ -8,6 +8,7 @@ import {
   Delete,
   Put,
   Query,
+  ParseUUIDPipe,
 } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
 import { CreateNotificationDto } from './dto/create-notification.dto';
@@ -27,7 +28,7 @@ export class NotificationsController {
 
   @Get()
   async findAll(
-    @Query('id') id?: string,
+    @Query('id',new ParseUUIDPipe({optional:true})) id?: string,
   ): Promise<Notification | Notification[]> {
     if (id) {
       return this.notificationsService.getNotificationById(id);
@@ -36,12 +37,12 @@ export class NotificationsController {
   }
 
   @Put(':id')
-  async update(@Param('id') id: string): Promise<Notification> {
+  async update(@Param('id', ParseUUIDPipe) id: string): Promise<Notification> {
     return this.notificationsService.updateNotification(id);
   }
 
   @Delete(':id')
-  async remove(@Param('id') id: string): Promise<string> {
+  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<string> {
     return this.notificationsService.deleteNotification(id);
   }
 }

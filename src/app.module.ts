@@ -7,6 +7,7 @@ import { TestDbModule } from './test-db/test-db.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EmailsModule } from './emails/emails.module';
 import { EmailsService } from './emails/emails.service';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -18,6 +19,7 @@ import { EmailsService } from './emails/emails.service';
     TestDbModule,
     EmailsModule,
     NotificationsModule,
+    PaymentModule,
   ],
   controllers: [AppController],
   providers: [AppService],
