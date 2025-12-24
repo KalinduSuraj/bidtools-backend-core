@@ -40,7 +40,7 @@ export class PaymentService {
       amount,
       currency || 'LKR',
     );
-
+    console.log(`hash => ${hash}`)
     const payhereUrl = 'https://sandbox.payhere.lk/pay/checkout';
 
     const redirectHtml = `
@@ -103,28 +103,32 @@ export class PaymentService {
   }
 
   async processNotification(data: any) {
-    // 1. Validate the Signature
+    console.log(`[Notify] Processing Order ID: ${data.order_id}`);
+
     const isValid = this.gatewayProvider.validatePayment(data);
+
     if (!isValid) {
-      console.error('Invalid PayHere Signature');
+      console.error('[Notify] ❌ Invalid Signature. Payment Rejected.');
       throw new BadRequestException('Invalid Signature');
     }
 
     const paymentId = data.order_id;
     const statusCode = data.status_code;
 
-    let status: 'SUCCESS' | 'FAILED' = 'FAILED';
-    if (statusCode == '2') {
-      status = 'SUCCESS';
-    }
     const payment = await this.paymentRepository.getPaymentById(paymentId);
-
     if (!payment) {
-      console.error(`Payment not found for ID: ${paymentId}`);
+      console.error(`[Notify] ❌ Payment ID ${paymentId} not found in DB`);
       return;
     }
 
-    payment.status = status;
+    if (statusCode == '2') {
+      payment.status = 'SUCCESS';
+      console.log(`[Notify] ✅ Payment SUCCESS for ${paymentId}`);
+    } else {
+      payment.status = 'FAILED';
+      console.log(`[Notify] ⚠️ Payment FAILED or PENDING for ${paymentId}`);
+    }
+
     await this.paymentRepository.updatePaymentDetails(payment);
   }
 

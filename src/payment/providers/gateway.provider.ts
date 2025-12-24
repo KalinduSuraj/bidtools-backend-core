@@ -50,6 +50,16 @@ export class GatewayProvider {
       .digest('hex')
       .toUpperCase();
 
+    console.log('--- 🛑 PAYHERE VALIDATION DEBUG 🛑 ---');
+    console.log('Order ID:', order_id);
+    console.log('Amount:', payhere_amount);
+    console.log('Status:', status_code);
+    console.log('Received Hash (Remote):', md5sig);
+    console.log('Expected Hash (Local): ', localHash);
+    console.log('--------------------------------------');
+
+    if(!md5sig) return false;
+    
     const bufferLocal = Buffer.from(localHash);
     const bufferRemote = Buffer.from(md5sig);
     return (

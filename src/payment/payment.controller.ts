@@ -9,6 +9,7 @@ import {
   Put,
   ParseUUIDPipe,
   Header,
+  HttpCode,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { CreatePaymentDto } from './dto/create-payment.dto';
@@ -25,7 +26,7 @@ export class PaymentController {
   }
 
   @Post('notify')
-  @Header('Content-Type', 'text/html')
+  @HttpCode(200)
   async notify(@Body() data: any) {
     await this.paymentService.processNotification(data);
     return 'OK';
