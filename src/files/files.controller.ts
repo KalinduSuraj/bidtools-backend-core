@@ -1,39 +1,26 @@
-import { Injectable } from '@nestjs/common';
 import {
-  S3Client,
-  PutObjectCommand,
-  GetObjectCommand,
-} from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+  Controller,
+  Post,
+  Get,
+  Param,
+  UploadedFile,
+  UseInterceptors,
+} from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { FilesService } from './files.service';
 
-@Injectable()
-export class FilesService {
-  private s3 = new S3Client({
-    region: process.env.AWS_REGION,
-    credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-    },
-  });
+@Controller('files')
+export class FilesController {
+  constructor(private readonly filesService: FilesService) {}
 
-  async uploadFile(file: Express.Multer.File) {
-    const command = new PutObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: file.originalname,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    });
-
-    await this.s3.send(command);
-    return { key: file.originalname };
+  @Post()
+  @UseInterceptors(FileInterceptor('file'))
+  async upload(@UploadedFile() file: Express.Multer.File) {
+    return this.filesService.uploadFile(file);
   }
 
-  async getFileUrl(key: string) {
-    const command = new GetObjectCommand({
-      Bucket: process.env.AWS_BUCKET_NAME,
-      Key: key,
-    });
-
-    return await getSignedUrl(this.s3, command, { expiresIn: 3600 }); // 1 hour
+  @Get(':key')
+  async getFile(@Param('key') key: string) {
+    return this.filesService.getFileUrl(key);
   }
 }
