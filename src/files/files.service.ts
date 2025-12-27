@@ -69,6 +69,10 @@ export class FilesService {
 
   async uploadFile(file: Express.Multer.File) {
     try {
+      if (!process.env.AWS_BUCKET_NAME) {
+        throw new Error('AWS_BUCKET_NAME is not configured');
+      }
+
       const uniqueKey = this.generateUniqueKey(file.originalname);
 
       const command = new PutObjectCommand({
@@ -88,6 +92,10 @@ export class FilesService {
 
   async getFileUrl(key: string): Promise<{ url: string }> {
     try {
+      if (!process.env.AWS_BUCKET_NAME) {
+        throw new Error('AWS_BUCKET_NAME is not configured');
+      }
+
       const command = new GetObjectCommand({
         Bucket: process.env.AWS_BUCKET_NAME,
         Key: key,
