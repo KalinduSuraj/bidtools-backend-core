@@ -6,8 +6,8 @@ import { DynomodbModule } from './common/dynomodb/dynomodb.module';
 import { TestDbModule } from './test-db/test-db.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { EmailsModule } from './emails/emails.module';
-import { EmailsService } from './emails/emails.service';
 import { PaymentModule } from './payment/payment.module';
+import { FilesModule } from './files/files.module';
 
 @Module({
   imports: [
@@ -20,6 +20,7 @@ import { PaymentModule } from './payment/payment.module';
     EmailsModule,
     NotificationsModule,
     PaymentModule,
+    FilesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
