@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException } from '@nestjs/common';
+import { Injectable, BadRequestException, Logger } from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class FilesService {
+  private readonly logger = new Logger(FilesService.name);
   private s3: S3Client;
 
   constructor() {
@@ -85,7 +86,7 @@ export class FilesService {
       await this.s3.send(command);
       return { key: uniqueKey };
     } catch (error) {
-      console.error('Error uploading file to S3:', error);
+      this.logger.error('Error uploading file to S3:', error);
       throw new BadRequestException('Failed to upload file to S3');
     }
   }
@@ -104,7 +105,7 @@ export class FilesService {
       const url = await getSignedUrl(this.s3, command, { expiresIn: 3600 }); // 1 hour
       return { url };
     } catch (error) {
-      console.error('Error generating signed URL:', error);
+      this.logger.error('Error generating signed URL:', error);
       throw new BadRequestException('Failed to generate file URL');
     }
   }
