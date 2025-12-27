@@ -21,10 +21,10 @@
     "db:init": "node scripts/init-dynamodb.js"
   },
   "dependencies": {
-    "@aws-sdk/client-dynamodb": "^3.948.0",
+    "@aws-sdk/client-dynamodb": "^3.958.0",
     "@aws-sdk/client-s3": "^3.958.0",
-    "@aws-sdk/client-ses": "^3.948.0",
-    "@aws-sdk/lib-dynamodb": "^3.948.0",
+    "@aws-sdk/client-ses": "^3.958.0",
+    "@aws-sdk/lib-dynamodb": "^3.958.0",
     "@aws-sdk/s3-request-presigner": "^3.958.0",
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
