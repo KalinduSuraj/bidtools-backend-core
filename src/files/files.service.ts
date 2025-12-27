@@ -46,7 +46,7 @@ export class FilesService {
     // Remove any path traversal attempts and invalid characters
     return filename
       .replace(/\.\./g, '')
-      .replace(/[^a-zA-Z0-9.-]/g, '_')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
       .substring(0, 255); // Limit filename length
   }
 
@@ -54,8 +54,15 @@ export class FilesService {
     const sanitizedFilename = this.sanitizeFilename(originalFilename);
     const uuid = uuidv4();
     const timestamp = Date.now();
-    const extension = sanitizedFilename.split('.').pop() || '';
-    const nameWithoutExt = sanitizedFilename.replace(`.${extension}`, '');
+    const lastDotIndex = sanitizedFilename.lastIndexOf('.');
+
+    if (lastDotIndex === -1) {
+      // No extension found
+      return `${timestamp}-${uuid}-${sanitizedFilename}`;
+    }
+
+    const extension = sanitizedFilename.substring(lastDotIndex + 1);
+    const nameWithoutExt = sanitizedFilename.substring(0, lastDotIndex);
 
     return `${timestamp}-${uuid}-${nameWithoutExt}.${extension}`;
   }
