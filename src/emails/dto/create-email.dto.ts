@@ -3,17 +3,17 @@ import { IsString, IsNotEmpty } from 'class-validator';
 export class CreateEmailDto {
   @IsString()
   @IsNotEmpty()
-  subject:string;
+  subject: string;
 
   @IsString()
   @IsNotEmpty()
-  body:string;
+  body: string;
 
   @IsString()
   @IsNotEmpty()
-  to:string;
+  to: string;
 
   @IsString()
   @IsNotEmpty()
-  from:string;
+  from: string;
 }

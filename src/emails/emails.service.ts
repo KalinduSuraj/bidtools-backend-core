@@ -12,7 +12,7 @@ import { EmailsRepository } from './emails.repository';
 export class EmailsService {
   private sesClient: SESClient;
 
-  constructor(private readonly emailsRepository: EmailsRepository,) {
+  constructor(private readonly emailsRepository: EmailsRepository) {
     const isLocal = process.env.NODE_ENV !== 'production';
     const config: any = {
       region: 'us-east-1',
@@ -20,7 +20,8 @@ export class EmailsService {
 
     if (isLocal) {
       config.endpoint = 'http://127.0.0.1:3001';
-      config.credentials = { //! remove this
+      config.credentials = {
+        //! remove this
         accessKeyId: 'fake',
         secretAccessKey: 'fake',
       };
