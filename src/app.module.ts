@@ -8,7 +8,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { EmailsModule } from './emails/emails.module';
 import { PaymentModule } from './payment/payment.module';
 import { FilesModule } from './files/files.module';
-import { InventoryModule } from './inventory/inventory.module';
+import { ItemModule } from './item/item.module';
 
 @Module({
   imports: [
@@ -22,7 +22,7 @@ import { InventoryModule } from './inventory/inventory.module';
     NotificationsModule,
     PaymentModule,
     FilesModule,
-    InventoryModule,
+    ItemModule,
   ],
   controllers: [AppController],
   providers: [AppService],
