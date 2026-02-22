@@ -114,4 +114,19 @@ export class ItemController {
   ): Promise<string> {
     return this.itemService.deleteItem(supplierId, itemId);
   }
+
+  /**
+   * Get item by item ID only (uses GSI1 index)
+   * GET /items/:itemId
+   * Useful for public item pages where supplier_id is unknown
+   * @param itemId - UUID of the item
+   * @returns The requested item
+   * @throws NotFoundException if item not found
+   */
+  @Get(':itemId')
+  async findByItemId(
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+  ): Promise<Item> {
+    return this.itemService.getItemByIdOnly(itemId);
+  }
 }

@@ -12,15 +12,23 @@ import {
 @Injectable()
 export class ItemRepository {
   private tableName = process.env.DYNAMODB_TABLE!;
+  private gsi1IndexName = process.env.DYNAMODB_GSI1_INDEX || 'GSI1';
 
   constructor(private readonly db: DynomodbService) {}
 
+  /**
+   * Save item with GSI1 keys for direct item lookup
+   * PK: SUPPLIER#<supplier_id>, SK: ITEM#<item_id>
+   * GSI1PK: ITEM#<item_id>, GSI1SK: METADATA
+   */
   async saveItem(item: Item): Promise<void> {
     const command = new PutCommand({
       TableName: this.tableName,
       Item: {
         PK: `SUPPLIER#${item.supplier_id}`,
         SK: `ITEM#${item.item_id}`,
+        GSI1PK: `ITEM#${item.item_id}`,
+        GSI1SK: 'METADATA',
         ...item,
       },
     });
@@ -28,6 +36,10 @@ export class ItemRepository {
     await this.db.client.send(command);
   }
 
+  /**
+   * Get all items for a supplier
+   * Query: PK = SUPPLIER#<supplier_id>
+   */
   async getItemsBySupplier(supplierId: string): Promise<Item[]> {
     const command = new QueryCommand({
       TableName: this.tableName,
@@ -43,6 +55,9 @@ export class ItemRepository {
     return (result.Items || []) as Item[];
   }
 
+  /**
+   * Get item by supplier_id and item_id (main table)
+   */
   async getItemById(supplierId: string, itemId: string): Promise<Item | null> {
     const command = new GetCommand({
       TableName: this.tableName,
@@ -56,12 +71,36 @@ export class ItemRepository {
     return (result.Item as Item) || null;
   }
 
+  /**
+   * Get item by item_id only using GSI1
+   * Query: GSI1PK = ITEM#<item_id>
+   */
+  async getItemByIdOnly(itemId: string): Promise<Item | null> {
+    const command = new QueryCommand({
+      TableName: this.tableName,
+      IndexName: this.gsi1IndexName,
+      KeyConditionExpression: 'GSI1PK = :pk AND GSI1SK = :sk',
+      ExpressionAttributeValues: {
+        ':pk': `ITEM#${itemId}`,
+        ':sk': 'METADATA',
+      },
+    });
+
+    const result = await this.db.client.send(command);
+    return (result.Items?.[0] as Item) || null;
+  }
+
+  /**
+   * Update item with GSI1 keys
+   */
   async updateItem(item: Item): Promise<void> {
     const command = new PutCommand({
       TableName: this.tableName,
       Item: {
         PK: `SUPPLIER#${item.supplier_id}`,
         SK: `ITEM#${item.item_id}`,
+        GSI1PK: `ITEM#${item.item_id}`,
+        GSI1SK: 'METADATA',
         ...item,
       },
     });
@@ -69,6 +108,9 @@ export class ItemRepository {
     await this.db.client.send(command);
   }
 
+  /**
+   * Delete item by supplier_id and item_id
+   */
   async deleteItem(supplierId: string, itemId: string): Promise<void> {
     const command = new DeleteCommand({
       TableName: this.tableName,
@@ -81,6 +123,9 @@ export class ItemRepository {
     await this.db.client.send(command);
   }
 
+  /**
+   * Get all items (scan - use sparingly)
+   */
   async getAllItems(): Promise<Item[]> {
     const command = new ScanCommand({
       TableName: this.tableName,
@@ -95,6 +140,9 @@ export class ItemRepository {
     return (result.Items || []) as Item[];
   }
 
+  /**
+   * Get items by status (scan with filter)
+   */
   async getItemsByStatus(status: string): Promise<Item[]> {
     const command = new ScanCommand({
       TableName: this.tableName,
