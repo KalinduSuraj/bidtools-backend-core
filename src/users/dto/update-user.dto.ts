@@ -1,4 +1,5 @@
 import { IsString, IsOptional, IsIn } from 'class-validator';
+import { USER_STATUSES } from '../../common/types';
 
 export class UpdateUserDto {
     @IsString()
@@ -11,6 +12,6 @@ export class UpdateUserDto {
 
     @IsString()
     @IsOptional()
-    @IsIn(['active', 'inactive', 'suspended', 'pending_verification'])
-    status?: string;
+    @IsIn(USER_STATUSES)
+    status?: (typeof USER_STATUSES)[number];
 }

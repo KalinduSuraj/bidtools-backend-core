@@ -6,6 +6,7 @@ import {
     IsIn,
     MinLength,
 } from 'class-validator';
+import { USER_ROLES } from '../../common/types';
 
 export class RegisterDto {
     @IsString()
@@ -23,8 +24,8 @@ export class RegisterDto {
 
     @IsString()
     @IsNotEmpty()
-    @IsIn(['contractor', 'supplier', 'admin'])
-    role: string;
+    @IsIn(USER_ROLES)
+    role: (typeof USER_ROLES)[number];
 
     @IsString()
     @IsOptional()

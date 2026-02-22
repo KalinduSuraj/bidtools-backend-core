@@ -4,12 +4,13 @@ import {
     IsNumber,
     IsIn,
 } from 'class-validator';
+import { USER_ROLES, VERIFICATION_STATUSES } from '../../common/types';
 
 export class UpdateProfileDto {
     @IsString()
     @IsOptional()
-    @IsIn(['contractor', 'supplier', 'admin'])
-    profile_type?: string;
+    @IsIn(USER_ROLES)
+    profile_type?: (typeof USER_ROLES)[number];
 
     @IsString()
     @IsOptional()
@@ -29,7 +30,8 @@ export class UpdateProfileDto {
 
     @IsString()
     @IsOptional()
-    verification_status?: string;
+    @IsIn(VERIFICATION_STATUSES)
+    verification_status?: (typeof VERIFICATION_STATUSES)[number];
 
     // Contractor-specific
     @IsString()

@@ -5,6 +5,7 @@ import {
     IsOptional,
     IsIn,
 } from 'class-validator';
+import { USER_ROLES } from '../../common/types';
 
 export class CreateUserDto {
     @IsString()
@@ -25,8 +26,8 @@ export class CreateUserDto {
 
     @IsString()
     @IsNotEmpty()
-    @IsIn(['contractor', 'supplier', 'admin'])
-    role: string;
+    @IsIn(USER_ROLES)
+    role: (typeof USER_ROLES)[number];
 
     @IsString()
     @IsOptional()

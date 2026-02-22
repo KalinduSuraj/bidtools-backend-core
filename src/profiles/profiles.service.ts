@@ -10,6 +10,7 @@ import {
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import type { ProfileType, VerificationStatus } from '../common/types';
 
 @Injectable()
 export class ProfilesService {
@@ -33,15 +34,13 @@ export class ProfilesService {
     const newProfile: Profile = {
       profile_id: profileId,
       user_id: createProfileDto.user_id,
-      profile_type: createProfileDto.profile_type as
-        | 'contractor'
-        | 'supplier'
-        | 'admin',
+      profile_type: createProfileDto.profile_type as ProfileType,
       company_name: createProfileDto.company_name,
       business_license: createProfileDto.business_license,
       address: createProfileDto.address,
       rating: createProfileDto.rating || 0,
-      verification_status: createProfileDto.verification_status || 'pending',
+      verification_status:
+        (createProfileDto.verification_status as VerificationStatus) || 'pending',
       created_at: new Date().toISOString(),
       // Contractor-specific
       project_locations: createProfileDto.project_locations,
@@ -80,7 +79,7 @@ export class ProfilesService {
       profile.profile_type,
       {
         ...updateProfileDto,
-        profile_type: updateProfileDto.profile_type as any,
+        profile_type: updateProfileDto.profile_type as ProfileType,
       },
     );
 

@@ -3,6 +3,7 @@ import { UsersRepository } from './users.repository';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
+import type { UserStatus } from '../common/types';
 
 @Injectable()
 export class UsersService {
@@ -16,7 +17,7 @@ export class UsersService {
             email: createUserDto.email,
             role: createUserDto.role,
             phone: createUserDto.phone,
-            status: createUserDto.status || 'pending_verification',
+            status: (createUserDto.status || 'pending_verification') as UserStatus,
             created_at: new Date().toISOString(),
         };
 

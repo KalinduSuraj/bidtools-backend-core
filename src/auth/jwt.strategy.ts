@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import * as jwksRsa from 'jwks-rsa';
+import { JwtPayload, AuthenticatedUser, UserRole } from '../common/types';
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
@@ -28,15 +29,14 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
         });
     }
 
-    async validate(payload: any) {
-        // Cognito access tokens have token_use = 'access'
-        // The payload contains sub, email, cognito:groups, custom:role, etc.
+    async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
+        const groups = (payload['cognito:groups'] || []) as UserRole[];
         return {
             userId: payload.sub,
-            email: payload.email,
-            username: payload.username || payload['cognito:username'],
-            'cognito:groups': payload['cognito:groups'] || [],
-            'custom:role': payload['custom:role'] || '',
+            email: payload.email || '',
+            username: payload.username || payload['cognito:username'] || '',
+            groups,
+            role: groups.length > 0 ? groups[0] : '',
         };
     }
 }

@@ -29,6 +29,21 @@ import { ForgotPasswordDto } from './dto/forgot-password.dto';
 import { ConfirmPasswordDto } from './dto/confirm-password.dto';
 import { UsersService } from '../users';
 import { ResendCodeDto } from './dto/resend-code.dto';
+import {
+  RegisterResponse,
+  LoginResponse,
+  RefreshTokenResponse,
+  MessageResponse,
+  UserStatus,
+} from '../common/types';
+import { User } from '../users/entities/user.entity';
+
+/** Typed shape for AWS Cognito SDK errors */
+interface CognitoError extends Error {
+  name: string;
+  message: string;
+  stack?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -95,7 +110,7 @@ export class AuthService {
   /**
    * Register a new user in Cognito and create a DynamoDB user record.
    */
-  async register(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto): Promise<RegisterResponse> {
     const { name, email, password, role, phone } = registerDto;
 
     try {
@@ -148,25 +163,26 @@ export class AuthService {
         message: 'User registered successfully. Please verify your email.',
         user,
       };
-    } catch (error: any) {
-      this.logger.error(`Registration failed: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Registration failed: ${err.message}`, err.stack);
 
-      if (error.message.includes('configured with secret but SECRET_HASH was not received')) {
+      if (err.message.includes('configured with secret but SECRET_HASH was not received')) {
         throw new InternalServerErrorException(
           'Cognito Client Secret is missing! Please add COGNITO_CLIENT_SECRET to your .env file and restart the server.',
         );
       }
 
-      if (error.name === 'UsernameExistsException') {
+      if (err.name === 'UsernameExistsException') {
         throw new BadRequestException('A user with this email already exists');
       }
-      if (error.name === 'InvalidPasswordException') {
+      if (err.name === 'InvalidPasswordException') {
         throw new BadRequestException(
           'Password does not meet requirements: minimum 8 characters',
         );
       }
       throw new InternalServerErrorException(
-        `Registration failed: ${error.message}`,
+        `Registration failed: ${err.message}`,
       );
     }
   }
@@ -174,7 +190,7 @@ export class AuthService {
   /**
    * Authenticate user via Cognito USER_PASSWORD_AUTH flow.
    */
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<LoginResponse> {
     const { email, password } = loginDto;
 
     try {
@@ -186,7 +202,7 @@ export class AuthService {
         AuthParameters: {
           USERNAME: cognitoUsername,
           PASSWORD: password,
-          SECRET_HASH: this.calculateSecretHash(cognitoUsername) as string,
+          SECRET_HASH: this.calculateSecretHash(cognitoUsername) ?? '',
         },
       });
 
@@ -198,7 +214,7 @@ export class AuthService {
       }
 
       // Fetch the user record from DynamoDB
-      let user: any = null;
+      let user: User | null = null;
       try {
         const users = await this.usersService.findAll();
         user = users.find((u) => u.email === email) || null;
@@ -207,27 +223,28 @@ export class AuthService {
       }
 
       return {
-        access_token: authResult.AccessToken,
+        access_token: authResult.AccessToken!,
         refresh_token: authResult.RefreshToken,
         id_token: authResult.IdToken,
         expires_in: authResult.ExpiresIn,
         user,
       };
-    } catch (error: any) {
-      this.logger.error(`Login failed: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Login failed: ${err.message}`, err.stack);
       if (
-        error.name === 'NotAuthorizedException' ||
-        error.name === 'UserNotFoundException'
+        err.name === 'NotAuthorizedException' ||
+        err.name === 'UserNotFoundException'
       ) {
         throw new UnauthorizedException('Invalid email or password');
       }
-      if (error.name === 'UserNotConfirmedException') {
+      if (err.name === 'UserNotConfirmedException') {
         throw new BadRequestException(
           'User is not verified. Please confirm your email first.',
         );
       }
       throw new InternalServerErrorException(
-        `Login failed: ${error.message}`,
+        `Login failed: ${err.message}`,
       );
     }
   }
@@ -248,7 +265,7 @@ export class AuthService {
   /**
    * Verify user email with OTP/confirmation code.
    */
-  async verify(verifyDto: VerifyDto) {
+  async verify(verifyDto: VerifyDto): Promise<MessageResponse> {
     const { email, otp } = verifyDto;
 
     try {
@@ -275,18 +292,19 @@ export class AuthService {
       }
 
       return { message: 'Email verified successfully' };
-    } catch (error: any) {
-      this.logger.error(`Verification failed: ${error.message}`, error.stack);
-      if (error.name === 'CodeMismatchException') {
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Verification failed: ${err.message}`, err.stack);
+      if (err.name === 'CodeMismatchException') {
         throw new BadRequestException('Invalid verification code');
       }
-      if (error.name === 'ExpiredCodeException') {
+      if (err.name === 'ExpiredCodeException') {
         throw new BadRequestException(
           'Verification code has expired. Please request a new one.',
         );
       }
       throw new InternalServerErrorException(
-        `Verification failed: ${error.message}`,
+        `Verification failed: ${err.message}`,
       );
     }
   }
@@ -295,7 +313,7 @@ export class AuthService {
    * Admin-confirm a user directly (bypasses email OTP).
    * Useful when Cognito default email delivery is unreliable.
    */
-  async adminConfirmUser(email: string) {
+  async adminConfirmUser(email: string): Promise<MessageResponse> {
     try {
       const cognitoUsername = await this.findCognitoUsernameByEmail(email);
 
@@ -318,13 +336,14 @@ export class AuthService {
       }
 
       return { message: `User ${email} confirmed successfully` };
-    } catch (error: any) {
-      this.logger.error(`Admin confirm failed: ${error.message}`, error.stack);
-      if (error.name === 'UserNotFoundException') {
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Admin confirm failed: ${err.message}`, err.stack);
+      if (err.name === 'UserNotFoundException') {
         throw new BadRequestException('No account found with this email');
       }
       throw new InternalServerErrorException(
-        `Admin confirm failed: ${error.message}`,
+        `Admin confirm failed: ${err.message}`,
       );
     }
   }
@@ -332,7 +351,7 @@ export class AuthService {
   /**
    * Resend the email verification code.
    */
-  async resendVerificationCode(resendCodeDto: ResendCodeDto) {
+  async resendVerificationCode(resendCodeDto: ResendCodeDto): Promise<MessageResponse> {
     const { email } = resendCodeDto;
 
     try {
@@ -350,16 +369,17 @@ export class AuthService {
       const result = await this.cognitoClient.send(command);
       this.logger.debug(`Resend result: ${JSON.stringify(result)}`);
       return { message: 'Verification code resent successfully. Please check your email.' };
-    } catch (error: any) {
-      this.logger.error(`Resend code failed: ${error.message}`, error.stack);
-      if (error.name === 'UserNotFoundException') {
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Resend code failed: ${err.message}`, err.stack);
+      if (err.name === 'UserNotFoundException') {
         throw new BadRequestException('No account found with this email');
       }
-      if (error.name === 'InvalidParameterException') {
+      if (err.name === 'InvalidParameterException') {
         throw new BadRequestException('User is already verified');
       }
       throw new InternalServerErrorException(
-        `Failed to resend verification code: ${error.message}`,
+        `Failed to resend verification code: ${err.message}`,
       );
     }
   }
@@ -367,7 +387,7 @@ export class AuthService {
   /**
    * Logout user by invalidating all tokens via GlobalSignOut.
    */
-  async logout(accessToken: string) {
+  async logout(accessToken: string): Promise<MessageResponse> {
     try {
       const command = new GlobalSignOutCommand({
         AccessToken: accessToken,
@@ -375,10 +395,11 @@ export class AuthService {
 
       await this.cognitoClient.send(command);
       return { message: 'Logged out successfully' };
-    } catch (error: any) {
-      this.logger.error(`Logout failed: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Logout failed: ${err.message}`, err.stack);
       throw new InternalServerErrorException(
-        `Logout failed: ${error.message}`,
+        `Logout failed: ${err.message}`,
       );
     }
   }
@@ -387,7 +408,7 @@ export class AuthService {
    * Refresh the access token using a valid refresh token.
    * Note: If a secret is used, we need the username/sub to calculate the SECRET_HASH.
    */
-  async refreshToken(refreshTokenDto: RefreshTokenDto) {
+  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponse> {
     const { refresh_token } = refreshTokenDto;
 
     try {
@@ -401,7 +422,7 @@ export class AuthService {
         ClientId: this.clientId,
         AuthParameters: {
           REFRESH_TOKEN: refresh_token,
-          ...(this.clientSecret ? { SECRET_HASH: this.calculateSecretHash('') as string } : {}), // Often not needed for refresh if sub is in token, but depends on Cognito config
+          ...(this.clientSecret ? { SECRET_HASH: this.calculateSecretHash('') ?? '' } : {}), // Often not needed for refresh if sub is in token, but depends on Cognito config
         },
       });
 
@@ -413,12 +434,13 @@ export class AuthService {
       }
 
       return {
-        access_token: authResult.AccessToken,
+        access_token: authResult.AccessToken!,
         id_token: authResult.IdToken,
         expires_in: authResult.ExpiresIn,
       };
-    } catch (error: any) {
-      this.logger.error(`Token refresh failed: ${error.message}`, error.stack);
+    } catch (error: unknown) {
+      const err = error as CognitoError;
+      this.logger.error(`Token refresh failed: ${err.message}`, err.stack);
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
   }
@@ -426,7 +448,7 @@ export class AuthService {
   /**
    * Request a password reset — sends a verification code to the user's email.
    */
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto) {
+  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponse> {
     const { email } = forgotPasswordDto;
 
     try {
@@ -438,17 +460,18 @@ export class AuthService {
 
       await this.cognitoClient.send(command);
       return { message: 'Password reset code sent to your email' };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as CognitoError;
       this.logger.error(
-        `Forgot password failed: ${error.message}`,
-        error.stack,
+        `Forgot password failed: ${err.message}`,
+        err.stack,
       );
-      if (error.name === 'UserNotFoundException') {
+      if (err.name === 'UserNotFoundException') {
         // Don't reveal whether user exists — return success anyway
         return { message: 'Password reset code sent to your email' };
       }
       throw new InternalServerErrorException(
-        `Password reset request failed: ${error.message}`,
+        `Password reset request failed: ${err.message}`,
       );
     }
   }
@@ -456,7 +479,7 @@ export class AuthService {
   /**
    * Confirm password reset with OTP and new password.
    */
-  async confirmPassword(confirmPasswordDto: ConfirmPasswordDto) {
+  async confirmPassword(confirmPasswordDto: ConfirmPasswordDto): Promise<MessageResponse> {
     const { email, otp, new_password } = confirmPasswordDto;
 
     try {
@@ -470,19 +493,20 @@ export class AuthService {
 
       await this.cognitoClient.send(command);
       return { message: 'Password reset successfully' };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const err = error as CognitoError;
       this.logger.error(
-        `Password reset confirm failed: ${error.message}`,
-        error.stack,
+        `Password reset confirm failed: ${err.message}`,
+        err.stack,
       );
-      if (error.name === 'CodeMismatchException') {
+      if (err.name === 'CodeMismatchException') {
         throw new BadRequestException('Invalid reset code');
       }
-      if (error.name === 'ExpiredCodeException') {
+      if (err.name === 'ExpiredCodeException') {
         throw new BadRequestException('Reset code has expired');
       }
       throw new InternalServerErrorException(
-        `Password reset failed: ${error.message}`,
+        `Password reset failed: ${err.message}`,
       );
     }
   }
