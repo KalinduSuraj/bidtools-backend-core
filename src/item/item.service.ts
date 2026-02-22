@@ -68,16 +68,48 @@ export class ItemService {
       ...updateItemDto,
       supplier_id: supplierId, // Keep original supplier
       item_id: itemId, // Keep original item id
+      updated_at: new Date().toISOString(),
     };
 
     await this.itemRepository.updateItem(updatedItem);
     return updatedItem;
   }
 
+  /**
+   * Soft delete an item (sets is_deleted=true)
+   */
   async deleteItem(supplierId: string, itemId: string): Promise<string> {
-    await this.getItemById(supplierId, itemId); // Verify item exists
-    await this.itemRepository.deleteItem(supplierId, itemId);
+    const existingItem = await this.getItemById(supplierId, itemId);
+
+    const deletedItem: Item = {
+      ...existingItem,
+      is_deleted: true,
+      deleted_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    };
+
+    await this.itemRepository.updateItem(deletedItem);
     return `Item with ID "${itemId}" has been deleted`;
+  }
+
+  /**
+   * Change item availability status
+   */
+  async changeStatus(
+    supplierId: string,
+    itemId: string,
+    status: 'available' | 'rented' | 'maintenance' | 'inactive',
+  ): Promise<Item> {
+    const existingItem = await this.getItemById(supplierId, itemId);
+
+    const updatedItem: Item = {
+      ...existingItem,
+      status,
+      updated_at: new Date().toISOString(),
+    };
+
+    await this.itemRepository.updateItem(updatedItem);
+    return updatedItem;
   }
 
   async getItemsByStatus(status: string): Promise<Item[]> {

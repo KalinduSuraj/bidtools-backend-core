@@ -4,6 +4,7 @@ import {
   Post,
   Body,
   Put,
+  Patch,
   Param,
   Delete,
   Query,
@@ -16,6 +17,7 @@ import {
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { ChangeStatusDto } from './dto/change-status.dto';
 import { Item } from './entities/item.entity';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
@@ -110,7 +112,9 @@ export class ItemController {
    * @param updateItemDto - Partial item data to update
    * @returns The updated item
    * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
    */
+  @UseGuards(JwtAuthGuard)
   @Put('supplier/:supplierId/:itemId')
   async update(
     @Param('supplierId', ParseUUIDPipe) supplierId: string,
@@ -121,13 +125,39 @@ export class ItemController {
   }
 
   /**
-   * Delete an item
+   * Change item availability status
+   * PATCH /items/supplier/:supplierId/:itemId/status
+   * @param supplierId - UUID of the supplier
+   * @param itemId - UUID of the item
+   * @param changeStatusDto - New status value
+   * @returns The updated item with new status
+   * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch('supplier/:supplierId/:itemId/status')
+  async changeStatus(
+    @Param('supplierId', ParseUUIDPipe) supplierId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body() changeStatusDto: ChangeStatusDto,
+  ): Promise<Item> {
+    return this.itemService.changeStatus(
+      supplierId,
+      itemId,
+      changeStatusDto.status,
+    );
+  }
+
+  /**
+   * Soft delete an item
    * DELETE /items/supplier/:supplierId/:itemId
    * @param supplierId - UUID of the supplier
    * @param itemId - UUID of the item
    * @returns Confirmation message
    * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
    */
+  @UseGuards(JwtAuthGuard)
   @Delete('supplier/:supplierId/:itemId')
   @HttpCode(HttpStatus.OK)
   async remove(
