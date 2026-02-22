@@ -20,10 +20,10 @@ import { UsersModule } from './users/users.module';
       envFilePath: '.env',
     }),
     DynomodbModule,
-    // TestDbModule,
-    // EmailsModule,
-    // NotificationsModule,
-    // PaymentModule,
+    TestDbModule,
+    EmailsModule,
+    NotificationsModule,
+    PaymentModule,
     FilesModule,
     ItemModule,
     AuthModule,
@@ -33,4 +33,4 @@ import { UsersModule } from './users/users.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

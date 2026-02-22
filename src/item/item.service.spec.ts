@@ -66,7 +66,6 @@ describe('ItemService', () => {
   describe('createItem', () => {
     it('should create a new item with generated id and timestamp', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Excavator',
         description: 'Heavy duty excavator',
         price_per_day: 500,
@@ -77,7 +76,7 @@ describe('ItemService', () => {
 
       mockItemRepository.saveItem.mockResolvedValue(undefined);
 
-      const result = await service.createItem(createItemDto);
+      const result = await service.createItem(mockSupplierId, createItemDto);
 
       expect(result.item_id).toBe(mockItemId);
       expect(result.supplier_id).toBe(mockSupplierId);
@@ -89,7 +88,6 @@ describe('ItemService', () => {
 
     it('should set default status to available', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Crane',
         price_per_day: 1000,
         price_per_hour: 100,
@@ -99,14 +97,13 @@ describe('ItemService', () => {
 
       mockItemRepository.saveItem.mockResolvedValue(undefined);
 
-      const result = await service.createItem(createItemDto);
+      const result = await service.createItem(mockSupplierId, createItemDto);
 
       expect(result.status).toBe('available');
     });
 
     it('should use provided status if specified', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Crane',
         price_per_day: 1000,
         price_per_hour: 100,
@@ -117,14 +114,13 @@ describe('ItemService', () => {
 
       mockItemRepository.saveItem.mockResolvedValue(undefined);
 
-      const result = await service.createItem(createItemDto);
+      const result = await service.createItem(mockSupplierId, createItemDto);
 
       expect(result.status).toBe('maintenance');
     });
 
     it('should set empty description if not provided', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Crane',
         price_per_day: 1000,
         price_per_hour: 100,
@@ -134,7 +130,7 @@ describe('ItemService', () => {
 
       mockItemRepository.saveItem.mockResolvedValue(undefined);
 
-      const result = await service.createItem(createItemDto);
+      const result = await service.createItem(mockSupplierId, createItemDto);
 
       expect(result.description).toBe('');
     });
@@ -280,16 +276,18 @@ describe('ItemService', () => {
   });
 
   describe('deleteItem', () => {
-    it('should delete an existing item', async () => {
+    it('should soft delete an existing item', async () => {
       mockItemRepository.getItemById.mockResolvedValue(mockItem);
-      mockItemRepository.deleteItem.mockResolvedValue(undefined);
+      mockItemRepository.updateItem.mockResolvedValue(undefined);
 
       const result = await service.deleteItem(mockSupplierId, mockItemId);
 
       expect(result).toBe(`Item with ID "${mockItemId}" has been deleted`);
-      expect(repository.deleteItem).toHaveBeenCalledWith(
-        mockSupplierId,
-        mockItemId,
+      expect(repository.updateItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          is_deleted: true,
+          deleted_at: expect.any(String),
+        }),
       );
     });
 
@@ -303,7 +301,7 @@ describe('ItemService', () => {
 
     it('should verify item exists before deleting', async () => {
       mockItemRepository.getItemById.mockResolvedValue(mockItem);
-      mockItemRepository.deleteItem.mockResolvedValue(undefined);
+      mockItemRepository.updateItem.mockResolvedValue(undefined);
 
       await service.deleteItem(mockSupplierId, mockItemId);
 
@@ -311,13 +309,7 @@ describe('ItemService', () => {
         mockSupplierId,
         mockItemId,
       );
-      expect(repository.deleteItem).toHaveBeenCalledWith(
-        mockSupplierId,
-        mockItemId,
-      );
-      // Verify getItemById was called before deleteItem
-      expect(repository.getItemById).toHaveBeenCalled();
-      expect(repository.deleteItem).toHaveBeenCalled();
+      expect(repository.updateItem).toHaveBeenCalled();
     });
   });
 

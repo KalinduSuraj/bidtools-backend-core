@@ -8,11 +8,11 @@ import {
   Max,
 } from 'class-validator';
 
+/**
+ * DTO for creating a new item
+ * Note: supplier_id is NOT included - it comes from the authenticated user's JWT token
+ */
 export class CreateItemDto {
-  @IsString()
-  @IsNotEmpty()
-  supplier_id: string;
-
   @IsString()
   @IsNotEmpty()
   name: string;
