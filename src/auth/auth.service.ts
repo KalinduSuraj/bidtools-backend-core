@@ -18,6 +18,7 @@ import {
   ConfirmForgotPasswordCommand,
   GlobalSignOutCommand,
   AdminAddUserToGroupCommand,
+  AdminConfirmSignUpCommand,
   AuthFlowType,
 } from '@aws-sdk/client-cognito-identity-provider';
 import { RegisterDto } from './dto/register.dto';
@@ -135,6 +136,7 @@ export class AuthService {
       // 3. Create user record in DynamoDB
       const user = await this.usersService.createUser({
         user_id: cognitoSub,
+        cognito_username: cognitoUsername,
         name,
         email,
         role,
@@ -176,13 +178,15 @@ export class AuthService {
     const { email, password } = loginDto;
 
     try {
+      const cognitoUsername = await this.findCognitoUsernameByEmail(email);
+
       const command = new InitiateAuthCommand({
         AuthFlow: AuthFlowType.USER_PASSWORD_AUTH,
         ClientId: this.clientId,
         AuthParameters: {
-          USERNAME: email,
+          USERNAME: cognitoUsername,
           PASSWORD: password,
-          SECRET_HASH: this.calculateSecretHash(email) as string,
+          SECRET_HASH: this.calculateSecretHash(cognitoUsername) as string,
         },
       });
 
@@ -229,16 +233,31 @@ export class AuthService {
   }
 
   /**
+   * Find the Cognito username (UUID) for a given email by looking up DynamoDB.
+   */
+  private async findCognitoUsernameByEmail(email: string): Promise<string> {
+    const users = await this.usersService.findAll();
+    const user = users.find((u) => u.email === email);
+    if (!user || !user.cognito_username) {
+      this.logger.warn(`No cognito_username found for email: ${email}, falling back to email`);
+      return email;
+    }
+    return user.cognito_username;
+  }
+
+  /**
    * Verify user email with OTP/confirmation code.
    */
   async verify(verifyDto: VerifyDto) {
     const { email, otp } = verifyDto;
 
     try {
+      const cognitoUsername = await this.findCognitoUsernameByEmail(email);
+
       const command = new ConfirmSignUpCommand({
         ClientId: this.clientId,
-        SecretHash: this.calculateSecretHash(email),
-        Username: email,
+        SecretHash: this.calculateSecretHash(cognitoUsername),
+        Username: cognitoUsername,
         ConfirmationCode: otp,
       });
 
@@ -273,6 +292,44 @@ export class AuthService {
   }
 
   /**
+   * Admin-confirm a user directly (bypasses email OTP).
+   * Useful when Cognito default email delivery is unreliable.
+   */
+  async adminConfirmUser(email: string) {
+    try {
+      const cognitoUsername = await this.findCognitoUsernameByEmail(email);
+
+      const command = new AdminConfirmSignUpCommand({
+        UserPoolId: this.userPoolId,
+        Username: cognitoUsername,
+      });
+
+      await this.cognitoClient.send(command);
+
+      // Update user status in DynamoDB
+      try {
+        const users = await this.usersService.findAll();
+        const user = users.find((u) => u.email === email);
+        if (user) {
+          await this.usersService.update(user.user_id, { status: 'active' });
+        }
+      } catch {
+        this.logger.warn('Could not update user status after admin confirmation');
+      }
+
+      return { message: `User ${email} confirmed successfully` };
+    } catch (error: any) {
+      this.logger.error(`Admin confirm failed: ${error.message}`, error.stack);
+      if (error.name === 'UserNotFoundException') {
+        throw new BadRequestException('No account found with this email');
+      }
+      throw new InternalServerErrorException(
+        `Admin confirm failed: ${error.message}`,
+      );
+    }
+  }
+
+  /**
    * Resend the email verification code.
    */
   async resendVerificationCode(resendCodeDto: ResendCodeDto) {
@@ -281,14 +338,15 @@ export class AuthService {
     try {
       // Look up the Cognito username from DynamoDB (we stored user_id = cognitoSub)
       // For alias-based pools, we can use the email directly with ResendConfirmationCode
+      const cognitoUsername = await this.findCognitoUsernameByEmail(email);
+
       const command = new ResendConfirmationCodeCommand({
         ClientId: this.clientId,
-        SecretHash: this.calculateSecretHash(email),
-        Username: email,
+        SecretHash: this.calculateSecretHash(cognitoUsername),
+        Username: cognitoUsername,
       });
 
-      this.logger.debug(`Resending verification code for email: ${email}`);
-      this.logger.debug(`Using ClientId: ${this.clientId}`);
+      this.logger.debug(`Resending verification code for email: ${email} (cognitoUsername: ${cognitoUsername})`);
       const result = await this.cognitoClient.send(command);
       this.logger.debug(`Resend result: ${JSON.stringify(result)}`);
       return { message: 'Verification code resent successfully. Please check your email.' };

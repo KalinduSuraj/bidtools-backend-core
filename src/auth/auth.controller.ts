@@ -43,6 +43,12 @@ export class AuthController {
     return this.authService.resendVerificationCode(resendCodeDto);
   }
 
+  @Post('admin/confirm')
+  @HttpCode(HttpStatus.OK)
+  adminConfirmUser(@Body('email') email: string) {
+    return this.authService.adminConfirmUser(email);
+  }
+
   @Post('logout')
   @HttpCode(HttpStatus.OK)
   logout(@Headers('authorization') authHeader: string) {

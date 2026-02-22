@@ -12,6 +12,10 @@ export class CreateUserDto {
     user_id: string;
 
     @IsString()
+    @IsOptional()
+    cognito_username?: string;
+
+    @IsString()
     @IsNotEmpty()
     name: string;
 

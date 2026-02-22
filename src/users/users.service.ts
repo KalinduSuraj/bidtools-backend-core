@@ -11,6 +11,7 @@ export class UsersService {
     async createUser(createUserDto: CreateUserDto): Promise<User> {
         const newUser: User = {
             user_id: createUserDto.user_id,
+            cognito_username: createUserDto.cognito_username,
             name: createUserDto.name,
             email: createUserDto.email,
             role: createUserDto.role,
