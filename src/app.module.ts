@@ -9,6 +9,7 @@ import { EmailsModule } from './emails/emails.module';
 import { PaymentModule } from './payment/payment.module';
 import { FilesModule } from './files/files.module';
 import { ItemModule } from './item/item.module';
+import { JobModule } from './job/job.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { UsersModule } from './users/users.module';
@@ -26,6 +27,7 @@ import { UsersModule } from './users/users.module';
     PaymentModule,
     FilesModule,
     ItemModule,
+    JobModule,
     AuthModule,
     ProfilesModule,
     UsersModule,
