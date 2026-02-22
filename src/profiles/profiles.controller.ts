@@ -1,0 +1,103 @@
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  Query,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import { ProfilesService } from './profiles.service';
+import { CreateProfileDto } from './dto/create-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+@Controller()
+export class ProfilesController {
+  constructor(private readonly profilesService: ProfilesService) { }
+
+  // ----- /profiles endpoints -----
+
+  @Get('profiles')
+  @UseGuards(JwtAuthGuard)
+  findAll(@Query('profile_type') profileType?: string) {
+    return this.profilesService.findAll(profileType);
+  }
+
+  @Post('profiles')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.CREATED)
+  create(@Body() createProfileDto: CreateProfileDto) {
+    return this.profilesService.create(createProfileDto);
+  }
+
+  @Get('profiles/:id')
+  @UseGuards(JwtAuthGuard)
+  findOne(@Param('id') id: string) {
+    return this.profilesService.findOne(id);
+  }
+
+  @Put('profiles/:id')
+  @UseGuards(JwtAuthGuard)
+  update(
+    @Param('id') id: string,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.profilesService.update(id, updateProfileDto);
+  }
+
+  @Delete('profiles/:id')
+  @UseGuards(JwtAuthGuard)
+  @HttpCode(HttpStatus.NO_CONTENT)
+  remove(@Param('id') id: string) {
+    return this.profilesService.remove(id);
+  }
+
+  // ----- /contractors/:id endpoint -----
+
+  @Get('contractors/:id')
+  @UseGuards(JwtAuthGuard)
+  getContractorProfile(@Param('id') id: string) {
+    return this.profilesService.getContractorProfile(id);
+  }
+
+  // ----- /suppliers/:id endpoint -----
+
+  @Get('suppliers/:id')
+  @UseGuards(JwtAuthGuard)
+  getSupplierProfile(@Param('id') id: string) {
+    return this.profilesService.getSupplierProfile(id);
+  }
+
+  // ----- /admins/:id endpoint -----
+
+  @Get('admins/:id')
+  @UseGuards(JwtAuthGuard)
+  getAdminProfile(@Param('id') id: string) {
+    return this.profilesService.getAdminProfile(id);
+  }
+
+  // ----- S3 Pre-signed URL endpoints -----
+
+  @Post('profiles/:userId/business-license/upload-url')
+  @UseGuards(JwtAuthGuard)
+  getUploadUrl(
+    @Param('userId') userId: string,
+    @Body('fileName') fileName: string,
+  ) {
+    return this.profilesService.getBusinessLicenseUploadUrl(userId, fileName);
+  }
+
+  @Get('profiles/:userId/business-license/download-url')
+  @UseGuards(JwtAuthGuard)
+  getDownloadUrl(
+    @Param('userId') userId: string,
+    @Query('key') key: string,
+  ) {
+    return this.profilesService.getBusinessLicenseDownloadUrl(key);
+  }
+}

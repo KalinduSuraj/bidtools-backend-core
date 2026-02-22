@@ -8,6 +8,11 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { EmailsModule } from './emails/emails.module';
 import { PaymentModule } from './payment/payment.module';
 import { FilesModule } from './files/files.module';
+// import { AuthService } from './auth/auth.service';
+// import { AuthResolver } from './auth/auth.resolver';
+import { AuthModule } from './auth/auth.module';
+import { ProfilesModule } from './profiles/profiles.module';
+import { UsersModule } from './users/users.module';
 
 @Module({
   imports: [
@@ -16,13 +21,16 @@ import { FilesModule } from './files/files.module';
       envFilePath: '.env',
     }),
     DynomodbModule,
-    TestDbModule,
-    EmailsModule,
-    NotificationsModule,
-    PaymentModule,
+    // TestDbModule,
+    // EmailsModule,
+    // NotificationsModule,
+    // PaymentModule,
     FilesModule,
+    AuthModule,
+    ProfilesModule,
+    UsersModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }
