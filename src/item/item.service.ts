@@ -75,4 +75,16 @@ export class ItemService {
   async getItemsByStatus(status: string): Promise<Item[]> {
     return this.itemRepository.getItemsByStatus(status);
   }
+
+  /**
+   * Get item by item_id only (uses GSI1)
+   * Useful for public item pages where supplier_id is unknown
+   */
+  async getItemByIdOnly(itemId: string): Promise<Item> {
+    const item = await this.itemRepository.getItemByIdOnly(itemId);
+    if (!item) {
+      throw new NotFoundException(`Item with ID "${itemId}" not found`);
+    }
+    return item;
+  }
 }
