@@ -4,17 +4,34 @@ import {
   Post,
   Body,
   Put,
+  Patch,
   Param,
   Delete,
   Query,
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { ChangeStatusDto } from './dto/change-status.dto';
 import { Item } from './entities/item.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request } from 'express';
+
+/**
+ * User payload from JWT token (attached by JwtStrategy)
+ */
+interface JwtUser {
+  userId: string; // sub from Cognito (supplier_id)
+  email?: string;
+  username?: string;
+  'cognito:groups'?: string[];
+  'custom:role'?: string;
+}
 
 /**
  * Controller for managing inventory items
@@ -25,15 +42,22 @@ export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   /**
-   * Create a new item
+   * Create a new item for the authenticated supplier
    * POST /items
-   * @param createItemDto - Item data including supplier_id, name, prices, location
+   * Requires: Authorization Bearer token
+   * @param req - Express request with authenticated user
+   * @param createItemDto - Item data (name, prices, location)
    * @returns The newly created item
    */
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createItemDto: CreateItemDto): Promise<Item> {
-    return this.itemService.createItem(createItemDto);
+  async create(
+    @Req() req: Request & { user: JwtUser },
+    @Body() createItemDto: CreateItemDto,
+  ): Promise<Item> {
+    const supplierId = req.user.userId; // Get supplier_id from JWT
+    return this.itemService.createItem(supplierId, createItemDto);
   }
 
   /**
@@ -88,7 +112,9 @@ export class ItemController {
    * @param updateItemDto - Partial item data to update
    * @returns The updated item
    * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
    */
+  @UseGuards(JwtAuthGuard)
   @Put('supplier/:supplierId/:itemId')
   async update(
     @Param('supplierId', ParseUUIDPipe) supplierId: string,
@@ -99,13 +125,39 @@ export class ItemController {
   }
 
   /**
-   * Delete an item
+   * Change item availability status
+   * PATCH /items/supplier/:supplierId/:itemId/status
+   * @param supplierId - UUID of the supplier
+   * @param itemId - UUID of the item
+   * @param changeStatusDto - New status value
+   * @returns The updated item with new status
+   * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
+   */
+  @UseGuards(JwtAuthGuard)
+  @Patch('supplier/:supplierId/:itemId/status')
+  async changeStatus(
+    @Param('supplierId', ParseUUIDPipe) supplierId: string,
+    @Param('itemId', ParseUUIDPipe) itemId: string,
+    @Body() changeStatusDto: ChangeStatusDto,
+  ): Promise<Item> {
+    return this.itemService.changeStatus(
+      supplierId,
+      itemId,
+      changeStatusDto.status,
+    );
+  }
+
+  /**
+   * Soft delete an item
    * DELETE /items/supplier/:supplierId/:itemId
    * @param supplierId - UUID of the supplier
    * @param itemId - UUID of the item
    * @returns Confirmation message
    * @throws NotFoundException if item not found
+   * @throws UnauthorizedException if not authenticated
    */
+  @UseGuards(JwtAuthGuard)
   @Delete('supplier/:supplierId/:itemId')
   @HttpCode(HttpStatus.OK)
   async remove(

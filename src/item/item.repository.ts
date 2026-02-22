@@ -37,16 +37,19 @@ export class ItemRepository {
   }
 
   /**
-   * Get all items for a supplier
+   * Get all items for a supplier (excludes soft-deleted)
    * Query: PK = SUPPLIER#<supplier_id>
    */
   async getItemsBySupplier(supplierId: string): Promise<Item[]> {
     const command = new QueryCommand({
       TableName: this.tableName,
       KeyConditionExpression: 'PK = :pk AND begins_with(SK, :sk)',
+      FilterExpression:
+        'attribute_not_exists(is_deleted) OR is_deleted = :false',
       ExpressionAttributeValues: {
         ':pk': `SUPPLIER#${supplierId}`,
         ':sk': 'ITEM#',
+        ':false': false,
       },
       ScanIndexForward: false,
     });
@@ -57,6 +60,7 @@ export class ItemRepository {
 
   /**
    * Get item by supplier_id and item_id (main table)
+   * Returns null if item is soft-deleted
    */
   async getItemById(supplierId: string, itemId: string): Promise<Item | null> {
     const command = new GetCommand({
@@ -68,21 +72,32 @@ export class ItemRepository {
     });
 
     const result = await this.db.client.send(command);
-    return (result.Item as Item) || null;
+    const item = result.Item as Item | undefined;
+
+    // Return null if item is soft-deleted
+    if (item?.is_deleted) {
+      return null;
+    }
+
+    return item || null;
   }
 
   /**
    * Get item by item_id only using GSI1
    * Query: GSI1PK = ITEM#<item_id>
+   * Returns null if item is soft-deleted
    */
   async getItemByIdOnly(itemId: string): Promise<Item | null> {
     const command = new QueryCommand({
       TableName: this.tableName,
       IndexName: this.gsi1IndexName,
       KeyConditionExpression: 'GSI1PK = :pk AND GSI1SK = :sk',
+      FilterExpression:
+        'attribute_not_exists(is_deleted) OR is_deleted = :false',
       ExpressionAttributeValues: {
         ':pk': `ITEM#${itemId}`,
         ':sk': 'METADATA',
+        ':false': false,
       },
     });
 
@@ -124,15 +139,17 @@ export class ItemRepository {
   }
 
   /**
-   * Get all items (scan - use sparingly)
+   * Get all items (scan - use sparingly, excludes soft-deleted)
    */
   async getAllItems(): Promise<Item[]> {
     const command = new ScanCommand({
       TableName: this.tableName,
-      FilterExpression: 'begins_with(PK, :pk) AND begins_with(SK, :sk)',
+      FilterExpression:
+        'begins_with(PK, :pk) AND begins_with(SK, :sk) AND (attribute_not_exists(is_deleted) OR is_deleted = :false)',
       ExpressionAttributeValues: {
         ':pk': 'SUPPLIER#',
         ':sk': 'ITEM#',
+        ':false': false,
       },
     });
 
@@ -141,13 +158,13 @@ export class ItemRepository {
   }
 
   /**
-   * Get items by status (scan with filter)
+   * Get items by status (scan with filter, excludes soft-deleted)
    */
   async getItemsByStatus(status: string): Promise<Item[]> {
     const command = new ScanCommand({
       TableName: this.tableName,
       FilterExpression:
-        'begins_with(PK, :pk) AND begins_with(SK, :sk) AND #status = :status',
+        'begins_with(PK, :pk) AND begins_with(SK, :sk) AND #status = :status AND (attribute_not_exists(is_deleted) OR is_deleted = :false)',
       ExpressionAttributeNames: {
         '#status': 'status',
       },
@@ -155,6 +172,7 @@ export class ItemRepository {
         ':pk': 'SUPPLIER#',
         ':sk': 'ITEM#',
         ':status': status,
+        ':false': false,
       },
     });
 

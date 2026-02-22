@@ -3,8 +3,17 @@ import { ItemController } from './item.controller';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
+import { ChangeStatusDto } from './dto/change-status.dto';
 import { Item } from './entities/item.entity';
 import { NotFoundException } from '@nestjs/common';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+
+// Mock the JwtAuthGuard
+jest.mock('../auth/guards/jwt-auth.guard', () => ({
+  JwtAuthGuard: jest.fn().mockImplementation(() => ({
+    canActivate: jest.fn().mockReturnValue(true),
+  })),
+}));
 
 describe('ItemController', () => {
   let controller: ItemController;
@@ -34,6 +43,8 @@ describe('ItemController', () => {
     getItemById: jest.fn(),
     updateItem: jest.fn(),
     deleteItem: jest.fn(),
+    changeStatus: jest.fn(),
+    getItemByIdOnly: jest.fn(),
   };
 
   beforeEach(async () => {
@@ -59,9 +70,14 @@ describe('ItemController', () => {
   });
 
   describe('create', () => {
+    const mockRequest = {
+      user: {
+        userId: mockSupplierId,
+      },
+    } as any;
+
     it('should create a new item', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Excavator',
         description: 'Heavy duty excavator',
         price_per_day: 500,
@@ -72,16 +88,15 @@ describe('ItemController', () => {
 
       mockItemService.createItem.mockResolvedValue(mockItem);
 
-      const result = await controller.create(createItemDto);
+      const result = await controller.create(mockRequest, createItemDto);
 
       expect(result).toEqual(mockItem);
-      expect(service.createItem).toHaveBeenCalledWith(createItemDto);
+      expect(service.createItem).toHaveBeenCalledWith(mockSupplierId, createItemDto);
       expect(service.createItem).toHaveBeenCalledTimes(1);
     });
 
     it('should create item with default status as available', async () => {
       const createItemDto: CreateItemDto = {
-        supplier_id: mockSupplierId,
         name: 'Crane',
         price_per_day: 1000,
         price_per_hour: 100,
@@ -92,7 +107,7 @@ describe('ItemController', () => {
       const expectedItem = { ...mockItem, name: 'Crane', status: 'available' };
       mockItemService.createItem.mockResolvedValue(expectedItem);
 
-      const result = await controller.create(createItemDto);
+      const result = await controller.create(mockRequest, createItemDto);
 
       expect(result.status).toBe('available');
     });
@@ -247,6 +262,65 @@ describe('ItemController', () => {
 
       await expect(
         controller.remove(mockSupplierId, 'non-existent-id'),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('changeStatus', () => {
+    it('should change item status', async () => {
+      const changeStatusDto: ChangeStatusDto = {
+        status: 'rented',
+      };
+
+      const updatedItem = { ...mockItem, status: 'rented' as const };
+      mockItemService.changeStatus.mockResolvedValue(updatedItem);
+
+      const result = await controller.changeStatus(
+        mockSupplierId,
+        mockItemId,
+        changeStatusDto,
+      );
+
+      expect(result).toEqual(updatedItem);
+      expect(service.changeStatus).toHaveBeenCalledWith(
+        mockSupplierId,
+        mockItemId,
+        'rented',
+      );
+    });
+
+    it('should throw NotFoundException when changing status of non-existent item', async () => {
+      const changeStatusDto: ChangeStatusDto = {
+        status: 'maintenance',
+      };
+
+      mockItemService.changeStatus.mockRejectedValue(
+        new NotFoundException('Item not found'),
+      );
+
+      await expect(
+        controller.changeStatus(mockSupplierId, 'non-existent-id', changeStatusDto),
+      ).rejects.toThrow(NotFoundException);
+    });
+  });
+
+  describe('findByItemId', () => {
+    it('should return item by item_id using GSI1', async () => {
+      mockItemService.getItemByIdOnly.mockResolvedValue(mockItem);
+
+      const result = await controller.findByItemId(mockItemId);
+
+      expect(result).toEqual(mockItem);
+      expect(service.getItemByIdOnly).toHaveBeenCalledWith(mockItemId);
+    });
+
+    it('should throw NotFoundException when item not found by item_id', async () => {
+      mockItemService.getItemByIdOnly.mockRejectedValue(
+        new NotFoundException('Item not found'),
+      );
+
+      await expect(
+        controller.findByItemId('non-existent-id'),
       ).rejects.toThrow(NotFoundException);
     });
   });

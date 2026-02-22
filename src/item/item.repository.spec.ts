@@ -189,7 +189,7 @@ describe('ItemRepository', () => {
   });
 
   describe('getAllItems', () => {
-    it('should scan all items', async () => {
+    it('should scan all items excluding soft-deleted', async () => {
       const items = [mockItem, { ...mockItem, item_id: 'another-id' }];
       mockSend.mockResolvedValue({
         Items: items,
@@ -201,7 +201,7 @@ describe('ItemRepository', () => {
       expect(mockSend).toHaveBeenCalledTimes(1);
       const command = mockSend.mock.calls[0][0];
       expect(command.input.FilterExpression).toBe(
-        'begins_with(PK, :pk) AND begins_with(SK, :sk)',
+        'begins_with(PK, :pk) AND begins_with(SK, :sk) AND (attribute_not_exists(is_deleted) OR is_deleted = :false)',
       );
     });
 
