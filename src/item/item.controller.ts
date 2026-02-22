@@ -10,11 +10,26 @@ import {
   ParseUUIDPipe,
   HttpCode,
   HttpStatus,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
 import { Item } from './entities/item.entity';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Request } from 'express';
+
+/**
+ * User payload from JWT token (attached by JwtStrategy)
+ */
+interface JwtUser {
+  userId: string; // sub from Cognito (supplier_id)
+  email?: string;
+  username?: string;
+  'cognito:groups'?: string[];
+  'custom:role'?: string;
+}
 
 /**
  * Controller for managing inventory items
@@ -25,15 +40,22 @@ export class ItemController {
   constructor(private readonly itemService: ItemService) {}
 
   /**
-   * Create a new item
+   * Create a new item for the authenticated supplier
    * POST /items
-   * @param createItemDto - Item data including supplier_id, name, prices, location
+   * Requires: Authorization Bearer token
+   * @param req - Express request with authenticated user
+   * @param createItemDto - Item data (name, prices, location)
    * @returns The newly created item
    */
   @Post()
+  @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() createItemDto: CreateItemDto): Promise<Item> {
-    return this.itemService.createItem(createItemDto);
+  async create(
+    @Req() req: Request & { user: JwtUser },
+    @Body() createItemDto: CreateItemDto,
+  ): Promise<Item> {
+    const supplierId = req.user.userId; // Get supplier_id from JWT
+    return this.itemService.createItem(supplierId, createItemDto);
   }
 
   /**

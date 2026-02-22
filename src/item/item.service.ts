@@ -9,13 +9,21 @@ import { v4 as uuid } from 'uuid';
 export class ItemService {
   constructor(private readonly itemRepository: ItemRepository) {}
 
-  async createItem(createItemDto: CreateItemDto): Promise<Item> {
+  /**
+   * Create a new item for a supplier
+   * @param supplierId - Supplier ID from authenticated user's JWT token
+   * @param createItemDto - Item data
+   */
+  async createItem(
+    supplierId: string,
+    createItemDto: CreateItemDto,
+  ): Promise<Item> {
     const itemId = uuid();
     const now = new Date().toISOString();
 
     const newItem: Item = {
       item_id: itemId,
-      supplier_id: createItemDto.supplier_id,
+      supplier_id: supplierId, // From JWT token
       name: createItemDto.name,
       description: createItemDto.description || '',
       price_per_day: createItemDto.price_per_day,
