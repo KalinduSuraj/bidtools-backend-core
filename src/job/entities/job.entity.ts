@@ -1,15 +1,15 @@
+export type JobStatus = 'OPEN' | 'CANCELLED' | 'CLOSED';
+
 export interface Job {
   job_id: string;
   contractor_id: string;
   job_description: string;
-  required_from: string; // ISO datetime
-  required_to: string; // ISO datetime
+  required_from: string; // ISO date
+  required_to: string; // ISO date
   latitude?: number;
   longitude?: number;
-  // status values like 'OPEN', 'CANCELLED', 'CLOSED' etc.
-  status?: string;
-  created_at: string; // ISO datetime
-  updated_at?: string; // ISO datetime
-  // Additional optional metadata may exist (e.g. approved_at, supplier_id when reserved)
-  [key: string]: any;
+  status: JobStatus;
+  created_at: string;
+  updated_at?: string;
+  // GSI2 keys will be added by repository when saving
 }
