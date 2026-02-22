@@ -30,7 +30,8 @@ export class JwtStrategy extends PassportStrategy(Strategy, 'jwt') {
     }
 
     async validate(payload: JwtPayload): Promise<AuthenticatedUser> {
-        const groups = (payload['cognito:groups'] || []) as UserRole[];
+        const rawGroups = (payload['cognito:groups'] || []) as string[];
+        const groups = rawGroups.map((g) => g.toLowerCase()) as UserRole[];
         return {
             userId: payload.sub,
             email: payload.email || '',

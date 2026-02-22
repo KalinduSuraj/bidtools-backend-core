@@ -4,6 +4,8 @@ import {
   UnauthorizedException,
   InternalServerErrorException,
   Logger,
+  Inject,
+  forwardRef,
 } from '@nestjs/common';
 import * as crypto from 'crypto';
 import { randomUUID } from 'crypto';
@@ -55,6 +57,7 @@ export class AuthService {
 
   constructor(
     private readonly configService: ConfigService,
+    @Inject(forwardRef(() => UsersService))
     private readonly usersService: UsersService,
   ) {
     const region =

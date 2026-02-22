@@ -29,8 +29,11 @@ export class RolesGuard implements CanActivate {
             throw new ForbiddenException('No user found in request');
         }
 
-        // Check Cognito group memberships
-        const hasRole = requiredRoles.some((role) => user.groups.includes(role));
+        // Check Cognito group memberships (case-insensitive)
+        const userGroupsLower = user.groups.map((g) => g.toLowerCase());
+        const hasRole = requiredRoles.some((role) =>
+            userGroupsLower.includes(role.toLowerCase()),
+        );
 
         if (!hasRole) {
             throw new ForbiddenException(

@@ -58,6 +58,10 @@ export class ProfilesService {
     return this.profilesRepository.getAllProfiles(profileType);
   }
 
+  async findByUserId(userId: string): Promise<Profile[]> {
+    return this.profilesRepository.getProfilesByUserId(userId);
+  }
+
   async findOne(profileId: string): Promise<Profile> {
     const profile = await this.profilesRepository.getProfileById(profileId);
     if (!profile) {
@@ -92,6 +96,24 @@ export class ProfilesService {
       profile.user_id,
       profile.profile_type,
     );
+  }
+
+  /**
+   * Admin: update verification status (pending → verified / rejected)
+   */
+  async updateVerificationStatus(
+    profileId: string,
+    verificationStatus: VerificationStatus,
+  ): Promise<Profile> {
+    const profile = await this.findOne(profileId);
+
+    await this.profilesRepository.updateProfile(
+      profile.user_id,
+      profile.profile_type,
+      { verification_status: verificationStatus },
+    );
+
+    return this.findOne(profileId);
   }
 
   // ----- Role-specific profile lookups -----

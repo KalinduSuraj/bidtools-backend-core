@@ -3,6 +3,7 @@ import {
   Get,
   Post,
   Put,
+  Patch,
   Delete,
   Body,
   Param,
@@ -15,6 +16,8 @@ import { ProfilesService } from './profiles.service';
 import { CreateProfileDto } from './dto/create-profile.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
 
 @Controller()
 export class ProfilesController {
@@ -26,6 +29,12 @@ export class ProfilesController {
   @UseGuards(JwtAuthGuard)
   findAll(@Query('profile_type') profileType?: string) {
     return this.profilesService.findAll(profileType);
+  }
+
+  @Get('profiles/user/:userId')
+  @UseGuards(JwtAuthGuard)
+  findByUserId(@Param('userId') userId: string) {
+    return this.profilesService.findByUserId(userId);
   }
 
   @Post('profiles')
@@ -55,6 +64,18 @@ export class ProfilesController {
   @HttpCode(HttpStatus.NO_CONTENT)
   remove(@Param('id') id: string) {
     return this.profilesService.remove(id);
+  }
+
+  // ----- Admin: Verification Status -----
+
+  @Patch('profiles/:profileId/verification-status')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('admin')
+  updateVerificationStatus(
+    @Param('profileId') profileId: string,
+    @Body('verification_status') verificationStatus: 'pending' | 'verified' | 'rejected',
+  ) {
+    return this.profilesService.updateVerificationStatus(profileId, verificationStatus);
   }
 
   // ----- /contractors/:id endpoint -----
