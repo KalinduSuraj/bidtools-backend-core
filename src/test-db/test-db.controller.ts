@@ -7,7 +7,7 @@ export class TestDbController {
 
   @Get()
   TestConnection() {
-    return ("DynamoDB API Working" );
+    return 'DynamoDB API Working';
   }
 
   @Post()

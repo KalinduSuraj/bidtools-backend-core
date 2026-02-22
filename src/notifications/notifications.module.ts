@@ -5,8 +5,8 @@ import { EmailsModule } from 'src/emails/emails.module';
 import { NotificationsRepository } from './notifications.repository';
 import { DynomodbModule } from '../common/dynomodb/dynomodb.module';
 @Module({
-  imports:[EmailsModule,DynomodbModule],
+  imports: [EmailsModule, DynomodbModule],
   controllers: [NotificationsController],
-  providers: [NotificationsService,NotificationsRepository],
+  providers: [NotificationsService, NotificationsRepository],
 })
 export class NotificationsModule {}

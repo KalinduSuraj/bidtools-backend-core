@@ -8,8 +8,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { EmailsModule } from './emails/emails.module';
 import { PaymentModule } from './payment/payment.module';
 import { FilesModule } from './files/files.module';
-// import { AuthService } from './auth/auth.service';
-// import { AuthResolver } from './auth/auth.resolver';
+import { ItemModule } from './item/item.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { UsersModule } from './users/users.module';
@@ -26,6 +25,7 @@ import { UsersModule } from './users/users.module';
     // NotificationsModule,
     // PaymentModule,
     FilesModule,
+    ItemModule,
     AuthModule,
     ProfilesModule,
     UsersModule,

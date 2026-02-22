@@ -28,7 +28,7 @@ export class NotificationsController {
 
   @Get()
   async findAll(
-    @Query('id',new ParseUUIDPipe({optional:true})) id?: string,
+    @Query('id', new ParseUUIDPipe({ optional: true })) id?: string,
   ): Promise<Notification | Notification[]> {
     if (id) {
       return this.notificationsService.getNotificationById(id);
