@@ -1,11 +1,13 @@
 import { Controller, Post, Body, Get, Query, Param } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
 import { RentalService } from './rental.service';
 import { CreateRentalDto } from './dto/create-rental.dto';
 import { Rental } from './entities/rental.entity';
 
+@ApiTags('Rentals')
 @Controller('rental')
 export class RentalController {
-  constructor(private readonly rentalService: RentalService) {}
+  constructor(private readonly rentalService: RentalService) { }
 
   @Post()
   async create(@Body() dto: CreateRentalDto): Promise<Rental> {

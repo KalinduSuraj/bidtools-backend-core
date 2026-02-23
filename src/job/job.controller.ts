@@ -10,15 +10,18 @@ import {
   UnauthorizedException,
   BadRequestException,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { JobService } from './job.service';
 import { CreateJobDto } from './dto/create-job.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { Request } from 'express';
 import { Job } from './entities/job.entity';
 
+@ApiTags('Jobs')
+@ApiBearerAuth('JWT-auth')
 @Controller('jobs')
 export class JobController {
-  constructor(private readonly jobService: JobService) {}
+  constructor(private readonly jobService: JobService) { }
 
   /**
    * Create a job (contractor from JWT)
