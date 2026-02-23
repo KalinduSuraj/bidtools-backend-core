@@ -10,6 +10,7 @@ import { PaymentModule } from './payment/payment.module';
 import { FilesModule } from './files/files.module';
 import { ItemModule } from './item/item.module';
 import { JobModule } from './job/job.module';
+import { BidModule } from './bid/bid.module';
 import { AuthModule } from './auth/auth.module';
 import { ProfilesModule } from './profiles/profiles.module';
 import { UsersModule } from './users/users.module';
@@ -28,6 +29,7 @@ import { UsersModule } from './users/users.module';
     FilesModule,
     ItemModule,
     JobModule,
+    BidModule,
     AuthModule,
     ProfilesModule,
     UsersModule,
