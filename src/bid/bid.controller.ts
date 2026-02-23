@@ -52,4 +52,21 @@ export class BidController {
 
     return this.bidService.getBidsForJob(jobId, authHeader);
   }
+
+  /**
+   * Get a specific bid's details by jobId and bidId. Accessible by contractor and supplier.
+   */
+  @Get(':jobId/:bidId')
+  async getBidDetails(
+    @Param('jobId') jobId: string,
+    @Param('bidId') bidId: string,
+    @Req() req: Request,
+  ): Promise<unknown> {
+    const authHeader =
+      typeof req.headers.authorization === 'string'
+        ? req.headers.authorization
+        : undefined;
+
+    return this.bidService.getBidDetails(jobId, bidId, authHeader);
+  }
 }
