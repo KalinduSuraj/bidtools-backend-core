@@ -6,7 +6,7 @@ import {
 import { CreateBidDto } from './dto/create-bid.dto';
 
 @Injectable()
-export class BidService {
+export class BidProxyService {
   private baseUrl = process.env.BID_SERVICE_BASE_URL;
 
   private getBaseUrl(): string {

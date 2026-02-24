@@ -1,1 +1,1 @@
-export { BidService } from './bid.proxy.service';
+export { BidProxyService } from './bid.proxy.service';

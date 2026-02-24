@@ -14,6 +14,7 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
+import { ApiTags, ApiBearerAuth } from '@nestjs/swagger';
 import { ItemService } from './item.service';
 import { CreateItemDto } from './dto/create-item.dto';
 import { UpdateItemDto } from './dto/update-item.dto';
@@ -37,9 +38,11 @@ interface JwtUser {
  * Controller for managing inventory items
  * Base route: /items
  */
+@ApiTags('Items')
+@ApiBearerAuth('JWT-auth')
 @Controller('items')
 export class ItemController {
-  constructor(private readonly itemService: ItemService) {}
+  constructor(private readonly itemService: ItemService) { }
 
   /**
    * Create a new item for the authenticated supplier

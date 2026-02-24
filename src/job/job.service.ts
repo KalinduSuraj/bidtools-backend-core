@@ -6,7 +6,7 @@ import { v4 as uuid } from 'uuid';
 
 @Injectable()
 export class JobService {
-  constructor(private readonly jobRepository: JobRepository) {}
+  constructor(private readonly jobRepository: JobRepository) { }
 
   async createJob(contractorId: string, dto: CreateJobDto): Promise<Job> {
     const jobId = uuid();
@@ -58,9 +58,9 @@ export class JobService {
       const a =
         Math.sin(dLat / 2) * Math.sin(dLat / 2) +
         Math.cos(toRad(lat1)) *
-          Math.cos(toRad(lat2)) *
-          Math.sin(dLon / 2) *
-          Math.sin(dLon / 2);
+        Math.cos(toRad(lat2)) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
       const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
       return R * c;
     };
@@ -97,6 +97,27 @@ export class JobService {
     const updated: Job = {
       ...job,
       status: 'CANCELLED',
+      updated_at: new Date().toISOString(),
+    };
+
+    await this.jobRepository.updateJob(updated);
+    return updated;
+  }
+
+  /**
+   * Update a job with auction results from the bidding service webhook.
+   * Accepts partial fields to update.
+   */
+  async updateJobAuctionResult(
+    jobId: string,
+    result: Partial<Pick<Job, 'status' | 'auction_job_id' | 'winning_bidder' | 'winning_amount' | 'total_bids_count' | 'auction_completed_at'>>,
+  ): Promise<Job> {
+    const job = await this.jobRepository.getJobByIdOnly(jobId);
+    if (!job) throw new NotFoundException(`Job ${jobId} not found`);
+
+    const updated: Job = {
+      ...job,
+      ...result,
       updated_at: new Date().toISOString(),
     };
 
