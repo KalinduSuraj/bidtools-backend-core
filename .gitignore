@@ -54,3 +54,10 @@ pids
 
 # Diagnostic reports (https://nodejs.org/api/report.html)
 report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+.vscode 
+scripts
+scripts/*
+
+
+#postman collection
+BidTools-API.postman_collection.json

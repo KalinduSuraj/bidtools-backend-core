@@ -1,0 +1,62 @@
+name: Build and Deploy Docker to EC2
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-push-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Build Docker image
+        run: |
+          docker build -t ${{ secrets.DOCKER_USERNAME }}/bidtools-backend:latest .
+
+      - name: Push Docker image
+        run: |
+          docker push ${{ secrets.DOCKER_USERNAME }}/bidtools-backend:latest
+
+      - name: Deploy on EC2 via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_KEY }}
+          script: |
+            docker pull ${{ secrets.DOCKER_USERNAME }}/bidtools-backend:latest
+            docker stop bidtools-backend || true
+            docker rm bidtools-backend || true
+            docker run -d --name bidtools-backend \
+              -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
+              -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e AWS_REGION=${{ secrets.AWS_REGION }} \
+              -e DYNAMODB_TABLE=${{ secrets.DYNAMODB_TABLE }} \
+              -e NODE_ENV=${{ secrets.NODE_ENV }} \
+              -e FROM_EMAIL=${{ secrets.FROM_EMAIL }} \
+              -e PAYHERE_MERCHANT_ID=${{ secrets.PAYHERE_MERCHANT_ID }} \
+              -e PAYHERE_SECRET=${{ secrets.PAYHERE_SECRET }} \
+              -e PAYHERE_MODE=${{ secrets.PAYHERE_MODE }} \
+              -e PAYHERE_RETURN_URL=${{ secrets.PAYHERE_RETURN_URL }} \
+              -e PAYHERE_CANCEL_URL=${{ secrets.PAYHERE_CANCEL_URL }} \
+              -e PAYHERE_NOTIFY_URL=${{ secrets.PAYHERE_NOTIFY_URL }} \
+              -e AWS_BUCKET_NAME=${{ secrets.AWS_BUCKET_NAME }} \
+              -e COGNITO_USER_POOL_ID=${{ secrets.COGNITO_USER_POOL_ID }} \
+              -e COGNITO_CLIENT_ID=${{ secrets.COGNITO_CLIENT_ID }} \
+              -e COGNITO_CLIENT_SECRET=${{ secrets.COGNITO_CLIENT_SECRET }} \
+              -e COGNITO_REGION=${{ secrets.COGNITO_REGION }} \
+              -e BIDDING_SERVICE_URL=${{ secrets.BIDDING_SERVICE_URL }} \
+              -e BIDDING_SERVICE_API_KEY=${{ secrets.BIDDING_SERVICE_API_KEY }} \
+              -e OUR_TENANT_ID=${{ secrets.OUR_TENANT_ID }} \
+              -e PORT=${{ secrets.PORT }} \
+              -p 4000:4000 ${{ secrets.DOCKER_USERNAME }}/bidtools-backend:latest
