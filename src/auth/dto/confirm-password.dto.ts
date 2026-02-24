@@ -1,16 +1,16 @@
 import { IsString, IsNotEmpty, IsEmail, MinLength } from 'class-validator';
 
 export class ConfirmPasswordDto {
-    @IsEmail()
-    @IsNotEmpty()
-    email: string;
+  @IsEmail()
+  @IsNotEmpty()
+  email: string;
 
-    @IsString()
-    @IsNotEmpty()
-    otp: string;
+  @IsString()
+  @IsNotEmpty()
+  otp: string;
 
-    @IsString()
-    @IsNotEmpty()
-    @MinLength(8)
-    new_password: string;
+  @IsString()
+  @IsNotEmpty()
+  @MinLength(8)
+  new_password: string;
 }

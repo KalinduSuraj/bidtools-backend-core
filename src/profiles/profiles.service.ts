@@ -40,7 +40,8 @@ export class ProfilesService {
       address: createProfileDto.address,
       rating: createProfileDto.rating || 0,
       verification_status:
-        (createProfileDto.verification_status as VerificationStatus) || 'pending',
+        (createProfileDto.verification_status as VerificationStatus) ||
+        'pending',
       created_at: new Date().toISOString(),
       // Contractor-specific
       project_locations: createProfileDto.project_locations,
@@ -65,9 +66,7 @@ export class ProfilesService {
   async findOne(profileId: string): Promise<Profile> {
     const profile = await this.profilesRepository.getProfileById(profileId);
     if (!profile) {
-      throw new NotFoundException(
-        `Profile with ID "${profileId}" not found`,
-      );
+      throw new NotFoundException(`Profile with ID "${profileId}" not found`);
     }
     return profile;
   }

@@ -91,7 +91,10 @@ describe('ItemController', () => {
       const result = await controller.create(mockRequest, createItemDto);
 
       expect(result).toEqual(mockItem);
-      expect(service.createItem).toHaveBeenCalledWith(mockSupplierId, createItemDto);
+      expect(service.createItem).toHaveBeenCalledWith(
+        mockSupplierId,
+        createItemDto,
+      );
       expect(service.createItem).toHaveBeenCalledTimes(1);
     });
 
@@ -299,7 +302,11 @@ describe('ItemController', () => {
       );
 
       await expect(
-        controller.changeStatus(mockSupplierId, 'non-existent-id', changeStatusDto),
+        controller.changeStatus(
+          mockSupplierId,
+          'non-existent-id',
+          changeStatusDto,
+        ),
       ).rejects.toThrow(NotFoundException);
     });
   });
@@ -319,9 +326,9 @@ describe('ItemController', () => {
         new NotFoundException('Item not found'),
       );
 
-      await expect(
-        controller.findByItemId('non-existent-id'),
-      ).rejects.toThrow(NotFoundException);
+      await expect(controller.findByItemId('non-existent-id')).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 });

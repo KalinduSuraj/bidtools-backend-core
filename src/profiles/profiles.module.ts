@@ -11,4 +11,4 @@ import { AuthModule } from '../auth/auth.module';
   providers: [ProfilesService, ProfilesRepository],
   exports: [ProfilesService],
 })
-export class ProfilesModule { }
+export class ProfilesModule {}

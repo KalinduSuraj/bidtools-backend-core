@@ -3,20 +3,20 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class GatewayProvider {
-
   // private merchantId = process.env.PAYHERE_MERCHANT_ID!.trim();
   // private merchantSecret = process.env.PAYHERE_SECRET!.trim();
 
-  
   private get merchantId(): string {
     const id = process.env.PAYHERE_MERCHANT_ID;
-    if (!id) throw new BadRequestException('PAYHERE_MERCHANT_ID is not configured');
+    if (!id)
+      throw new BadRequestException('PAYHERE_MERCHANT_ID is not configured');
     return id.trim();
   }
 
   private get merchantSecret(): string {
     const secret = process.env.PAYHERE_SECRET;
-    if (!secret) throw new BadRequestException('PAYHERE_SECRET is not configured');
+    if (!secret)
+      throw new BadRequestException('PAYHERE_SECRET is not configured');
     return secret.trim();
   }
 

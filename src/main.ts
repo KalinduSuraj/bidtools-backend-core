@@ -13,18 +13,27 @@ async function bootstrap() {
     .setTitle('BidTools API')
     .setDescription(
       'BidTools Backend Core — Job bidding platform API with auction microservice integration, ' +
-      'payments, notifications, item management, rentals, and user management.',
+        'payments, notifications, item management, rentals, and user management.',
     )
     .setVersion('1.0')
     .addBearerAuth(
       { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
       'JWT-auth',
     )
-    .addTag('Auth', 'User registration, login, verification, and password management')
+    .addTag(
+      'Auth',
+      'User registration, login, verification, and password management',
+    )
     .addTag('Users', 'User CRUD operations (admin)')
-    .addTag('Profiles', 'Profile management for contractors, suppliers, and admins')
+    .addTag(
+      'Profiles',
+      'Profile management for contractors, suppliers, and admins',
+    )
     .addTag('Jobs', 'Job creation, search, and contractor management')
-    .addTag('Bidding', 'Auction lifecycle — create auctions, place bids, SSE streaming, webhooks')
+    .addTag(
+      'Bidding',
+      'Auction lifecycle — create auctions, place bids, SSE streaming, webhooks',
+    )
     .addTag('Items', 'Inventory item management for suppliers')
     .addTag('Rentals', 'Equipment rental management')
     .addTag('Payments', 'Payment processing via PayHere gateway')

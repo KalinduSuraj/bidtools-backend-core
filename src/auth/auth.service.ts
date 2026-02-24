@@ -65,8 +65,12 @@ export class AuthService {
       this.configService.get<string>('AWS_REGION') ||
       'us-east-1';
 
-    this.clientId = this.configService.get<string>('COGNITO_CLIENT_ID') as string;
-    this.userPoolId = this.configService.get<string>('COGNITO_USER_POOL_ID') as string;
+    this.clientId = this.configService.get<string>(
+      'COGNITO_CLIENT_ID',
+    ) as string;
+    this.userPoolId = this.configService.get<string>(
+      'COGNITO_USER_POOL_ID',
+    ) as string;
     this.clientSecret = this.configService.get<string>('COGNITO_CLIENT_SECRET');
 
     this.logger.debug(`Cognito Client ID: ${this.clientId}`);
@@ -74,8 +78,12 @@ export class AuthService {
 
     if (this.clientSecret) {
       if (this.clientSecret === 'PASTE_YOUR_CLIENT_SECRET_HERE') {
-        this.logger.error('!!! CRITICAL ERROR: YOUR COGNITO_CLIENT_SECRET IN .env IS STILL A PLACEHOLDER !!!');
-        this.logger.error('Registration and login will fail until you provide the REAL secret from the AWS Console.');
+        this.logger.error(
+          '!!! CRITICAL ERROR: YOUR COGNITO_CLIENT_SECRET IN .env IS STILL A PLACEHOLDER !!!',
+        );
+        this.logger.error(
+          'Registration and login will fail until you provide the REAL secret from the AWS Console.',
+        );
       } else {
         this.logger.debug('Cognito Client Secret detected');
       }
@@ -170,7 +178,11 @@ export class AuthService {
       const err = error as CognitoError;
       this.logger.error(`Registration failed: ${err.message}`, err.stack);
 
-      if (err.message.includes('configured with secret but SECRET_HASH was not received')) {
+      if (
+        err.message.includes(
+          'configured with secret but SECRET_HASH was not received',
+        )
+      ) {
         throw new InternalServerErrorException(
           'Cognito Client Secret is missing! Please add COGNITO_CLIENT_SECRET to your .env file and restart the server.',
         );
@@ -246,9 +258,7 @@ export class AuthService {
           'User is not verified. Please confirm your email first.',
         );
       }
-      throw new InternalServerErrorException(
-        `Login failed: ${err.message}`,
-      );
+      throw new InternalServerErrorException(`Login failed: ${err.message}`);
     }
   }
 
@@ -259,7 +269,9 @@ export class AuthService {
     const users = await this.usersService.findAll();
     const user = users.find((u) => u.email === email);
     if (!user || !user.cognito_username) {
-      this.logger.warn(`No cognito_username found for email: ${email}, falling back to email`);
+      this.logger.warn(
+        `No cognito_username found for email: ${email}, falling back to email`,
+      );
       return email;
     }
     return user.cognito_username;
@@ -335,7 +347,9 @@ export class AuthService {
           await this.usersService.update(user.user_id, { status: 'active' });
         }
       } catch {
-        this.logger.warn('Could not update user status after admin confirmation');
+        this.logger.warn(
+          'Could not update user status after admin confirmation',
+        );
       }
 
       return { message: `User ${email} confirmed successfully` };
@@ -354,7 +368,9 @@ export class AuthService {
   /**
    * Resend the email verification code.
    */
-  async resendVerificationCode(resendCodeDto: ResendCodeDto): Promise<MessageResponse> {
+  async resendVerificationCode(
+    resendCodeDto: ResendCodeDto,
+  ): Promise<MessageResponse> {
     const { email } = resendCodeDto;
 
     try {
@@ -368,10 +384,15 @@ export class AuthService {
         Username: cognitoUsername,
       });
 
-      this.logger.debug(`Resending verification code for email: ${email} (cognitoUsername: ${cognitoUsername})`);
+      this.logger.debug(
+        `Resending verification code for email: ${email} (cognitoUsername: ${cognitoUsername})`,
+      );
       const result = await this.cognitoClient.send(command);
       this.logger.debug(`Resend result: ${JSON.stringify(result)}`);
-      return { message: 'Verification code resent successfully. Please check your email.' };
+      return {
+        message:
+          'Verification code resent successfully. Please check your email.',
+      };
     } catch (error: unknown) {
       const err = error as CognitoError;
       this.logger.error(`Resend code failed: ${err.message}`, err.stack);
@@ -401,9 +422,7 @@ export class AuthService {
     } catch (error: unknown) {
       const err = error as CognitoError;
       this.logger.error(`Logout failed: ${err.message}`, err.stack);
-      throw new InternalServerErrorException(
-        `Logout failed: ${err.message}`,
-      );
+      throw new InternalServerErrorException(`Logout failed: ${err.message}`);
     }
   }
 
@@ -411,7 +430,9 @@ export class AuthService {
    * Refresh the access token using a valid refresh token.
    * Note: If a secret is used, we need the username/sub to calculate the SECRET_HASH.
    */
-  async refreshToken(refreshTokenDto: RefreshTokenDto): Promise<RefreshTokenResponse> {
+  async refreshToken(
+    refreshTokenDto: RefreshTokenDto,
+  ): Promise<RefreshTokenResponse> {
     const { refresh_token } = refreshTokenDto;
 
     try {
@@ -425,7 +446,9 @@ export class AuthService {
         ClientId: this.clientId,
         AuthParameters: {
           REFRESH_TOKEN: refresh_token,
-          ...(this.clientSecret ? { SECRET_HASH: this.calculateSecretHash('') ?? '' } : {}), // Often not needed for refresh if sub is in token, but depends on Cognito config
+          ...(this.clientSecret
+            ? { SECRET_HASH: this.calculateSecretHash('') ?? '' }
+            : {}), // Often not needed for refresh if sub is in token, but depends on Cognito config
         },
       });
 
@@ -451,7 +474,9 @@ export class AuthService {
   /**
    * Request a password reset — sends a verification code to the user's email.
    */
-  async forgotPassword(forgotPasswordDto: ForgotPasswordDto): Promise<MessageResponse> {
+  async forgotPassword(
+    forgotPasswordDto: ForgotPasswordDto,
+  ): Promise<MessageResponse> {
     const { email } = forgotPasswordDto;
 
     try {
@@ -465,10 +490,7 @@ export class AuthService {
       return { message: 'Password reset code sent to your email' };
     } catch (error: unknown) {
       const err = error as CognitoError;
-      this.logger.error(
-        `Forgot password failed: ${err.message}`,
-        err.stack,
-      );
+      this.logger.error(`Forgot password failed: ${err.message}`, err.stack);
       if (err.name === 'UserNotFoundException') {
         // Don't reveal whether user exists — return success anyway
         return { message: 'Password reset code sent to your email' };
@@ -482,7 +504,9 @@ export class AuthService {
   /**
    * Confirm password reset with OTP and new password.
    */
-  async confirmPassword(confirmPasswordDto: ConfirmPasswordDto): Promise<MessageResponse> {
+  async confirmPassword(
+    confirmPasswordDto: ConfirmPasswordDto,
+  ): Promise<MessageResponse> {
     const { email, otp, new_password } = confirmPasswordDto;
 
     try {

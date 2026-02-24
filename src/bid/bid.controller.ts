@@ -11,7 +11,12 @@ import {
   Logger,
   Res,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiParam } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiParam,
+} from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import type { Request, Response } from 'express';
 import { CreateBidDto } from './dto/create-bid.dto';
@@ -29,7 +34,7 @@ export class BidController {
   constructor(
     private readonly bidProxyService: BidProxyService,
     private readonly bidAuctionService: BidAuctionService,
-  ) { }
+  ) {}
 
   // ──────────────────────────────────────────────
   // Bidding Microservice Integration Endpoints
@@ -55,7 +60,9 @@ export class BidController {
   /**
    * POST /bid/place — Place a bid via the Bidding Microservice
    */
-  @ApiOperation({ summary: 'Place a bid via the Bidding Microservice (lower price wins)' })
+  @ApiOperation({
+    summary: 'Place a bid via the Bidding Microservice (lower price wins)',
+  })
   @ApiBearerAuth('JWT-auth')
   @UseGuards(JwtAuthGuard)
   @Post('place')
@@ -73,8 +80,13 @@ export class BidController {
    * GET /bid/stream/:jobId — SSE proxy that connects to the Bidding Microservice's
    * SSE stream and pipes real-time bid updates to our frontend.
    */
-  @ApiOperation({ summary: 'SSE stream — real-time bid updates for an auction' })
-  @ApiParam({ name: 'jobId', description: 'Auction job ID from the bidding service' })
+  @ApiOperation({
+    summary: 'SSE stream — real-time bid updates for an auction',
+  })
+  @ApiParam({
+    name: 'jobId',
+    description: 'Auction job ID from the bidding service',
+  })
   @Get('stream/:jobId')
   async streamBids(
     @Param('jobId') jobId: string,
@@ -96,7 +108,9 @@ export class BidController {
       const upstream = await fetch(streamUrl);
 
       if (!upstream.ok || !upstream.body) {
-        res.write(`data: ${JSON.stringify({ error: 'Failed to connect to bidding service stream' })}\n\n`);
+        res.write(
+          `data: ${JSON.stringify({ error: 'Failed to connect to bidding service stream' })}\n\n`,
+        );
         res.end();
         return;
       }
@@ -123,13 +137,15 @@ export class BidController {
       // Clean up when client disconnects
       req.on('close', () => {
         this.logger.log(`Client disconnected from SSE stream for job ${jobId}`);
-        reader.cancel().catch(() => { });
+        reader.cancel().catch(() => {});
       });
 
       pump();
     } catch (err) {
       this.logger.error(`SSE proxy error: ${(err as Error).message}`);
-      res.write(`data: ${JSON.stringify({ error: 'Stream connection failed' })}\n\n`);
+      res.write(
+        `data: ${JSON.stringify({ error: 'Stream connection failed' })}\n\n`,
+      );
       res.end();
     }
   }
@@ -138,7 +154,9 @@ export class BidController {
    * POST /bid/webhook/:tenantId — Receive JOB_AUCTION_COMPLETED webhook
    * from the Bidding Microservice. No JWT guard — validated by event payload.
    */
-  @ApiOperation({ summary: 'Webhook receiver for JOB_AUCTION_COMPLETED events' })
+  @ApiOperation({
+    summary: 'Webhook receiver for JOB_AUCTION_COMPLETED events',
+  })
   @ApiParam({ name: 'tenantId', description: 'Tenant identifier' })
   @Post('webhook/:tenantId')
   async handleWebhook(
@@ -196,7 +214,7 @@ export class BidController {
   /**
    * GET /bid/:jobId/:bidId — Get a specific bid's details (old proxy-style)
    */
-  @ApiOperation({ summary: '[Legacy] Get a specific bid\'s details' })
+  @ApiOperation({ summary: "[Legacy] Get a specific bid's details" })
   @Get(':jobId/:bidId')
   async getBidDetails(
     @Param('jobId') jobId: string,

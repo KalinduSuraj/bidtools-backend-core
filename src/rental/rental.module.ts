@@ -9,4 +9,4 @@ import { DynomodbModule } from '../common/dynomodb/dynomodb.module';
   controllers: [RentalController],
   providers: [RentalService, RentalRepository],
 })
-export class RentalModule { }
+export class RentalModule {}

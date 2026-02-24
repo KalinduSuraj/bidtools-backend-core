@@ -7,7 +7,7 @@ import { Rental } from './entities/rental.entity';
 @ApiTags('Rentals')
 @Controller('rental')
 export class RentalController {
-  constructor(private readonly rentalService: RentalService) { }
+  constructor(private readonly rentalService: RentalService) {}
 
   @Post()
   async create(@Body() dto: CreateRentalDto): Promise<Rental> {

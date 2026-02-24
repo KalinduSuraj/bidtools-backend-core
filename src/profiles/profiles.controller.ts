@@ -24,7 +24,7 @@ import { Roles } from '../auth/decorators/roles.decorator';
 @ApiBearerAuth('JWT-auth')
 @Controller()
 export class ProfilesController {
-  constructor(private readonly profilesService: ProfilesService) { }
+  constructor(private readonly profilesService: ProfilesService) {}
 
   // ----- /profiles endpoints -----
 
@@ -55,10 +55,7 @@ export class ProfilesController {
 
   @Put('profiles/:id')
   @UseGuards(JwtAuthGuard)
-  update(
-    @Param('id') id: string,
-    @Body() updateProfileDto: UpdateProfileDto,
-  ) {
+  update(@Param('id') id: string, @Body() updateProfileDto: UpdateProfileDto) {
     return this.profilesService.update(id, updateProfileDto);
   }
 
@@ -76,9 +73,13 @@ export class ProfilesController {
   @Roles('admin')
   updateVerificationStatus(
     @Param('profileId') profileId: string,
-    @Body('verification_status') verificationStatus: 'pending' | 'verified' | 'rejected',
+    @Body('verification_status')
+    verificationStatus: 'pending' | 'verified' | 'rejected',
   ) {
-    return this.profilesService.updateVerificationStatus(profileId, verificationStatus);
+    return this.profilesService.updateVerificationStatus(
+      profileId,
+      verificationStatus,
+    );
   }
 
   // ----- /contractors/:id endpoint -----
@@ -118,10 +119,7 @@ export class ProfilesController {
 
   @Get('profiles/:userId/business-license/download-url')
   @UseGuards(JwtAuthGuard)
-  getDownloadUrl(
-    @Param('userId') userId: string,
-    @Query('key') key: string,
-  ) {
+  getDownloadUrl(@Param('userId') userId: string, @Query('key') key: string) {
     return this.profilesService.getBusinessLicenseDownloadUrl(key);
   }
 }

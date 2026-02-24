@@ -6,9 +6,9 @@ import { DynomodbModule } from '../common/dynomodb/dynomodb.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({
-    imports: [DynomodbModule, forwardRef(() => AuthModule)],
-    controllers: [UsersController],
-    providers: [UsersService, UsersRepository],
-    exports: [UsersService],
+  imports: [DynomodbModule, forwardRef(() => AuthModule)],
+  controllers: [UsersController],
+  providers: [UsersService, UsersRepository],
+  exports: [UsersService],
 })
-export class UsersModule { }
+export class UsersModule {}

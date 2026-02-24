@@ -165,7 +165,9 @@ describe('ItemService', () => {
       const result = await service.getItemsBySupplier(mockSupplierId);
 
       expect(result).toEqual(supplierItems);
-      expect(repository.getItemsBySupplier).toHaveBeenCalledWith(mockSupplierId);
+      expect(repository.getItemsBySupplier).toHaveBeenCalledWith(
+        mockSupplierId,
+      );
     });
 
     it('should return empty array when supplier has no items', async () => {

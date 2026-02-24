@@ -18,7 +18,7 @@ import { UpdatePaymentDto } from './dto/update-payment.dto';
 @ApiTags('Payments')
 @Controller('payments')
 export class PaymentController {
-  constructor(private readonly paymentService: PaymentService) { }
+  constructor(private readonly paymentService: PaymentService) {}
 
   @Post()
   @Header('Content-Type', 'text/html')

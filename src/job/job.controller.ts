@@ -21,7 +21,7 @@ import { Job } from './entities/job.entity';
 @ApiBearerAuth('JWT-auth')
 @Controller('jobs')
 export class JobController {
-  constructor(private readonly jobService: JobService) { }
+  constructor(private readonly jobService: JobService) {}
 
   /**
    * Create a job (contractor from JWT)

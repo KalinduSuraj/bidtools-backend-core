@@ -42,7 +42,7 @@ interface JwtUser {
 @ApiBearerAuth('JWT-auth')
 @Controller('items')
 export class ItemController {
-  constructor(private readonly itemService: ItemService) { }
+  constructor(private readonly itemService: ItemService) {}
 
   /**
    * Create a new item for the authenticated supplier

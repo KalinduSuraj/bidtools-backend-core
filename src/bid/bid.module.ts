@@ -12,4 +12,4 @@ import { JobModule } from '../job/job.module';
   providers: [BidProxyService, BidAuctionService, BiddingServiceClient],
   exports: [BidProxyService, BidAuctionService, BiddingServiceClient],
 })
-export class BidModule { }
+export class BidModule {}
