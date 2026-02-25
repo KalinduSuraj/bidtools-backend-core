@@ -18,13 +18,15 @@ export class FilesService {
     // region must match the bucket region in production
     region: process.env.AWS_REGION,
     credentials: {
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+      accessKeyId: process.env.S3_AWS_ACCESS_KEY_ID!,
+      secretAccessKey: process.env.S3_AWS_SECRET_ACCESS_KEY!,
     },
   });
   private readonly logger = new Logger(FilesService.name);
 
   async uploadFile(file: Express.Multer.File) {
+    console.log(process.env.S3_AWS_ACCESS_KEY_ID);
+    console.log(process.env.S3_AWS_SECRET_ACCESS_KEY);
     if (!file) {
       throw new BadRequestException('No file provided');
     }
