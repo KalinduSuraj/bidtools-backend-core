@@ -55,6 +55,14 @@ export class JobController {
   }
 
   /**
+   * Public: Get all jobs (useful for admin or supplier views)
+   */
+  @Get()
+  async findAll(): Promise<Job[]> {
+    return this.jobService.getAllJobs();
+  }
+
+  /**
    * Get job by jobId (GSI2)
    */
   // Removed single job public endpoint - not required in simplified API
