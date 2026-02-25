@@ -55,18 +55,49 @@ export class JobRepository {
    * Query: GSI2PK = JOB#<job_id>
    */
   async getJobByIdOnly(jobId: string): Promise<Job | null> {
-    const command = new QueryCommand({
-      TableName: this.tableName,
-      IndexName: this.gsi2IndexName,
-      KeyConditionExpression: 'GSI2PK = :pk AND GSI2SK = :sk',
-      ExpressionAttributeValues: {
-        ':pk': `JOB#${jobId}`,
-        ':sk': 'METADATA',
-      },
-    });
+    try {
+      const command = new QueryCommand({
+        TableName: this.tableName,
+        IndexName: this.gsi2IndexName,
+        KeyConditionExpression: 'GSI2PK = :pk AND GSI2SK = :sk',
+        ExpressionAttributeValues: {
+          ':pk': `JOB#${jobId}`,
+          ':sk': 'METADATA',
+        },
+      });
 
-    const result = await this.db.client.send(command);
-    return (result.Items?.[0] as Job) || null;
+      const result = await this.db.client.send(command);
+      return (result.Items?.[0] as Job) || null;
+    } catch (err: any) {
+      // If the table doesn't have the GSI configured (e.g. local/dev),
+      // fall back to a scan-based lookup. This is less efficient but
+      // keeps the server functional until the GSI is provisioned.
+      const msg =
+        typeof err === 'object' &&
+        err !== null &&
+        'message' in err &&
+        typeof (err as { message?: unknown }).message === 'string'
+          ? (err as { message: string }).message
+          : '';
+      if (
+        msg.includes('does not have the specified index') ||
+        (typeof err === 'object' &&
+          err !== null &&
+          'name' in err &&
+          (err as { name?: unknown }).name === 'ValidationException')
+      ) {
+        const scan = new ScanCommand({
+          TableName: this.tableName,
+          FilterExpression: 'contains(SK, :jobId)',
+          ExpressionAttributeValues: {
+            ':jobId': jobId,
+          },
+        });
+        const result = await this.db.client.send(scan);
+        return (result.Items?.[0] as Job) || null;
+      }
+      throw err;
+    }
   }
 
   /**
