@@ -60,14 +60,6 @@ export class JobController {
   // Removed single job public endpoint - not required in simplified API
 
   /**
-   * Get details for a specific job (by jobId) - uses GSI2
-   */
-  @Get(':jobId')
-  async findOne(@Param('jobId') jobId: string): Promise<Job> {
-    return this.jobService.getJobById(jobId);
-  }
-
-  /**
    * Get nearest jobs for supplier view
    * Query params: latitude, longitude, radiusKm (optional)
    */
@@ -94,5 +86,13 @@ export class JobController {
     }
 
     return this.jobService.getNearestJobs(lat, lon, radius ?? 50);
+  }
+
+  /**
+   * Get details for a specific job (by jobId) - uses GSI2
+   */
+  @Get(':jobId')
+  async findOne(@Param('jobId') jobId: string): Promise<Job> {
+    return this.jobService.getJobById(jobId);
   }
 }
