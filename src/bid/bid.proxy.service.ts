@@ -7,11 +7,14 @@ import { CreateBidDto } from './dto/create-bid.dto';
 
 @Injectable()
 export class BidProxyService {
-  private baseUrl = process.env.BID_SERVICE_BASE_URL;
+  // Read base URL from env - this repo uses BIDDING_SERVICE_URL in .env
+  private baseUrl = process.env.BIDDING_SERVICE_URL;
+  // Optional API key for the external bidding service
+  private apiKey = process.env.BIDDING_SERVICE_API_KEY;
 
   private getBaseUrl(): string {
     if (!this.baseUrl)
-      throw new BadRequestException('BID_SERVICE_BASE_URL not configured');
+      throw new BadRequestException('BIDDING_SERVICE_URL not configured');
     return this.baseUrl.replace(/\/$/, '');
   }
 
@@ -36,6 +39,7 @@ export class BidProxyService {
         headers: {
           'content-type': 'application/json',
           ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(this.apiKey ? { 'x-api-key': this.apiKey } : {}),
         },
         body: JSON.stringify(payload),
       });
@@ -66,6 +70,7 @@ export class BidProxyService {
         method: 'GET',
         headers: {
           ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(this.apiKey ? { 'x-api-key': this.apiKey } : {}),
         },
       });
 
@@ -101,6 +106,7 @@ export class BidProxyService {
         method: 'GET',
         headers: {
           ...(authHeader ? { Authorization: authHeader } : {}),
+          ...(this.apiKey ? { 'x-api-key': this.apiKey } : {}),
         },
       });
 
@@ -136,6 +142,7 @@ export class BidProxyService {
         headers: {
           'content-type': 'application/json',
           ...(apiKey ? { 'x-api-key': apiKey } : {}),
+          ...(this.apiKey ? { 'x-api-key': this.apiKey } : {}),
         },
         body: JSON.stringify(dto),
       });
@@ -171,6 +178,7 @@ export class BidProxyService {
         headers: {
           'content-type': 'application/json',
           ...(apiKey ? { 'x-api-key': apiKey } : {}),
+          ...(this.apiKey ? { 'x-api-key': this.apiKey } : {}),
         },
         body: JSON.stringify(dto),
       });
