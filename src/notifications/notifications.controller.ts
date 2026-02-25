@@ -1,52 +1,30 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  Put,
-  Query,
-  ParseUUIDPipe,
-} from '@nestjs/common';
-import { ApiTags } from '@nestjs/swagger';
+import { Controller, Post, Get, Patch, Body, Param } from '@nestjs/common';
 import { NotificationsService } from './notifications.service';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { CreateUserNotificationDto } from './dto/create-user-notification.dto';
 
-import { Notification } from './entities/notification.entity';
-
-@ApiTags('Notifications')
-@Controller('notifications')
-export class NotificationsController {
+@Controller('notification')
+export class NotificationController {
   constructor(private readonly notificationsService: NotificationsService) {}
 
   @Post()
-  async create(
-    @Body() createNotificationDto: CreateNotificationDto,
-  ): Promise<Notification> {
-    return this.notificationsService.createNotification(createNotificationDto);
+  async create(@Body() dto: CreateUserNotificationDto) {
+    return this.notificationsService.createUserNotification(dto);
   }
 
-  @Get()
-  async findAll(
-    @Query('id', new ParseUUIDPipe({ optional: true })) id?: string,
-  ): Promise<Notification | Notification[]> {
-    if (id) {
-      return this.notificationsService.getNotificationById(id);
-    }
-    return this.notificationsService.getAllNotification();
+  // Place the unread-count route before the generic user route to avoid route conflicts
+  @Get(':userId/unread-count')
+  async getUnreadCount(@Param('userId') userId: string) {
+    return this.notificationsService.getUnreadCountForUser(userId);
   }
 
-  @Put(':id')
-  async update(@Param('id', ParseUUIDPipe) id: string): Promise<Notification> {
-    return this.notificationsService.updateNotification(id);
+  @Get(':userId')
+  async getByUser(@Param('userId') userId: string) {
+    return this.notificationsService.getNotificationsByUser(userId);
   }
 
-  @Delete(':id')
-  async remove(@Param('id', ParseUUIDPipe) id: string): Promise<string> {
-    return this.notificationsService.deleteNotification(id);
+  @Patch(':userId/:sk/read')
+  async markAsRead(@Param('userId') userId: string, @Param('sk') sk: string) {
+    await this.notificationsService.markNotificationAsRead(userId, sk);
+    return { success: true };
   }
 }
-
-//notifications/users/{id} //!need to implement this endpoint
