@@ -32,6 +32,10 @@ export class JobService {
     return this.jobRepository.getJobsByContractor(contractorId);
   }
 
+  async getAllJobs(): Promise<Job[]> {
+    return this.jobRepository.getAllJobs();
+  }
+
   /**
    * Return jobs nearest to given coordinates (in kilometers). Uses simple Haversine distance.
    */
