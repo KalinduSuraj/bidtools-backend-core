@@ -6,7 +6,6 @@ import {
   Req,
   Get,
   Param,
-  Sse,
   UnauthorizedException,
   Logger,
   Res,
