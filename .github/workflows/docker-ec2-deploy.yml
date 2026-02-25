@@ -59,4 +59,5 @@ jobs:
               -e BIDDING_SERVICE_API_KEY=${{ secrets.BIDDING_SERVICE_API_KEY }} \
               -e OUR_TENANT_ID=${{ secrets.OUR_TENANT_ID }} \
               -e PORT=${{ secrets.PORT }} \
+              -e RESEND_API_KEY=${{ secrets.RESEND_API_KEY }} \
               -p 4000:4000 ${{ secrets.DOCKER_USERNAME }}/bidtools-backend:latest

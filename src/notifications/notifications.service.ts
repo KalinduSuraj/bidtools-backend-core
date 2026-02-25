@@ -1,75 +1,57 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Injectable } from '@nestjs/common';
 
-import { Notification } from './entities/notification.entity';
-import { EmailsService } from '../emails/emails.service';
+import { CreateUserNotificationDto } from './dto/create-user-notification.dto';
 import { NotificationsRepository } from './notifications.repository';
-import { v4 as uuid } from 'uuid';
+import { Notification } from './entities/notification.entity';
+
 @Injectable()
 export class NotificationsService {
   constructor(
-    private readonly emailsService: EmailsService,
     private readonly notificationsRepository: NotificationsRepository,
   ) {}
 
-  //done for now
-  async createNotification(
-    createNotificationDto: CreateNotificationDto,
-  ): Promise<Notification> {
-    const { targetEmail, ...notificationData } = createNotificationDto;
+  /**
+   * Create a notification for a specific user (PK = USER#<userId>, SK = NOTIFICATION#<ts>)
+   */
+  async createUserNotification(createDto: CreateUserNotificationDto) {
+    const { user_id, type, message, is_read } = createDto;
 
-    const notificationId = uuid();
+    const res = await this.notificationsRepository.saveNotificationForUser(
+      user_id,
+      {
+        type,
+        message,
+        is_read,
+      },
+    );
 
-    const newNotification: Notification = {
-      ...notificationData,
-      notification_id: notificationId,
-      user_id: uuid(),
-      is_read: false,
-      created_at: new Date().toISOString(),
-    };
-    await this.notificationsRepository.saveNotification(newNotification);
-    await this.emailsService.createEmail({
-      to: targetEmail || 'test@gmail.com',
-      subject: 'New Notification Received',
-      body: `You have a new notification: ${createNotificationDto.message || 'No content'}`,
-      from: process.env.FROM_EMAIL || 'noreply@bidtools.com',
-    });
-    return newNotification;
+    return {
+      PK: res.PK,
+      SK: res.SK,
+      type,
+      message,
+      is_read: is_read ?? false,
+    } as Partial<Notification>;
   }
 
-  //done for now
-  async getAllNotification(): Promise<Notification[]> {
-    return this.notificationsRepository.getAllNotification();
+  /**
+   * Get all notifications for a given user.
+   */
+  async getNotificationsByUser(userId: string): Promise<Notification[]> {
+    return this.notificationsRepository.getNotificationsByUser(userId);
   }
 
-  //done for now
-  async getNotificationById(id: string): Promise<Notification> {
-    const notification =
-      await this.notificationsRepository.getNotificationById(id);
-    if (!notification) {
-      throw new NotFoundException(`Notification with ID "${id}" not found`);
-    }
-    return notification;
+  /**
+   * Get unread notification count for a user.
+   */
+  async getUnreadCountForUser(userId: string): Promise<number> {
+    return this.notificationsRepository.getUnreadCountForUser(userId);
   }
 
-  //done for now
-  async updateNotification(id: string): Promise<Notification> {
-    const notification = await this.getNotificationById(id);
-
-    const updatedNotification = {
-      ...notification,
-      is_read: true,
-      notification_id: id,
-    } as Notification;
-
-    await this.notificationsRepository.updateNotification(updatedNotification);
-
-    return updatedNotification;
-  }
-
-  //done for now
-  async deleteNotification(id: string): Promise<string> {
-    await this.notificationsRepository.deleteNotification(id);
-    return 'Notification Removed';
+  /**
+   * Mark a notification as read for a user (identified by SK).
+   */
+  async markNotificationAsRead(userId: string, sk: string): Promise<void> {
+    await this.notificationsRepository.markNotificationAsRead(userId, sk);
   }
 }
