@@ -2,12 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DynomodbService } from '../common/dynomodb/dynomodb.service';
 import { Notification } from './entities/notification.entity';
 // Import QueryCommand here
-import {
-  PutCommand,
-  QueryCommand,
-  GetCommand,
-  DeleteCommand,
-} from '@aws-sdk/lib-dynamodb';
+import { PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
 export class NotificationsRepository {
@@ -15,67 +10,86 @@ export class NotificationsRepository {
 
   constructor(private readonly db: DynomodbService) {}
 
-  async saveNotification(notification: Notification) {
+  /**
+   * Save a notification scoped to a user. The caller should provide
+   * notification fields (type, message, is_read) and a timestamp/ID will be used
+   * to build the SK. This stores items with PK = USER#<userId> and SK = NOTIFICATION#<ts>
+   */
+  async saveNotificationForUser(
+    userId: string,
+    notification: Partial<Notification>,
+  ) {
+    const ts = new Date()
+      .toISOString()
+      .replace(/[-:.TZ]/g, '')
+      .slice(0, 14); // YYYYMMDDHHMMSS
+    const sk = `NOTIFICATION#${ts}`;
+
     const command = new PutCommand({
       TableName: this.tableName,
       Item: {
-        PK: 'NOTIFICATION',
-        SK: `ITEM#${notification.notification_id}`,
-        ...notification,
+        PK: `USER#${userId}`,
+        SK: sk,
+        type: notification.type,
+        message: notification.message,
+        is_read: notification.is_read ?? false,
+        created_at: new Date().toISOString(),
       },
     });
 
     await this.db.client.send(command);
+
+    return { PK: `USER#${userId}`, SK: sk };
   }
 
-  async getAllNotification() {
+  /**
+   * Query notifications for a specific user. Items stored with PK = USER#<userId>
+   */
+  async getNotificationsByUser(userId: string) {
     const command = new QueryCommand({
       TableName: this.tableName,
       KeyConditionExpression: 'PK = :pk',
       ExpressionAttributeValues: {
-        ':pk': 'NOTIFICATION',
+        ':pk': `USER#${userId}`,
       },
       ScanIndexForward: false,
     });
 
     const result = await this.db.client.send(command);
-
     return (result.Items || []) as Notification[];
   }
 
-  async getNotificationById(
-    notificationId: string,
-  ): Promise<Notification | null> {
-    const command = new GetCommand({
+  /**
+   * Count unread notifications for a user.
+   */
+  async getUnreadCountForUser(userId: string) {
+    const command = new QueryCommand({
       TableName: this.tableName,
-      Key: {
-        PK: 'NOTIFICATION',
-        SK: `ITEM#${notificationId}`,
+      KeyConditionExpression: 'PK = :pk',
+      ExpressionAttributeValues: {
+        ':pk': `USER#${userId}`,
+        ':false': false,
       },
+      FilterExpression: 'is_read = :false',
+      Select: 'COUNT',
     });
 
     const result = await this.db.client.send(command);
-    return (result.Item as Notification) || null;
+    return result.Count ?? 0;
   }
-  async deleteNotification(notificationId: string): Promise<void> {
-    const command = new DeleteCommand({
-      TableName: this.tableName,
-      Key: {
-        PK: 'NOTIFICATION',
-        SK: `ITEM#${notificationId}`,
-      },
-    });
 
-    await this.db.client.send(command);
-  }
-  async updateNotification(notification: Notification) {
+  /**
+   * Mark a specific user notification (by PK and SK) as read.
+   * Uses an Update-style Put here for simplicity (overwrites existing item keys).
+   */
+  async markNotificationAsRead(userId: string, sk: string) {
     const command = new PutCommand({
       TableName: this.tableName,
       Item: {
-        PK: 'NOTIFICATION',
-        SK: `ITEM#${notification.notification_id}`,
-        ...notification,
-        updatedAt: new Date().toISOString(),
+        PK: `USER#${userId}`,
+        SK: sk,
+        is_read: true,
+        updated_at: new Date().toISOString(),
       },
     });
 
