@@ -40,6 +40,8 @@ jobs:
             docker run -d --name bidtools-backend \
               -e AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }} \
               -e AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+              -e S3_AWS_ACCESS_KEY_ID=${{ secrets.S3_AWS_ACCESS_KEY_ID }} \
+              -e S3_AWS_SECRET_ACCESS_KEY=${{ secrets.S3_AWS_SECRET_ACCESS_KEY }} \
               -e AWS_REGION=${{ secrets.AWS_REGION }} \
               -e DYNAMODB_TABLE=${{ secrets.DYNAMODB_TABLE }} \
               -e NODE_ENV=${{ secrets.NODE_ENV }} \
