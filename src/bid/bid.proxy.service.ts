@@ -40,10 +40,12 @@ export class BidProxyService {
         body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
+      const data: unknown = await res.json();
       if (!res.ok) {
         throw new InternalServerErrorException(
-          data?.message || `Bid service responded with status ${res.status}`,
+          typeof data === 'object' && data !== null && 'message' in data
+            ? (data as { message: string }).message
+            : `Bid service responded with status ${res.status}`,
         );
       }
 
@@ -60,17 +62,19 @@ export class BidProxyService {
     const url = `${base}/jobs/${encodeURIComponent(jobId)}/bids`;
 
     try {
-      const res = await (global as any).fetch(url, {
+      const res = await (global as { fetch: typeof fetch }).fetch(url, {
         method: 'GET',
         headers: {
           ...(authHeader ? { Authorization: authHeader } : {}),
         },
       });
 
-      const data = await res.json();
+      const data: unknown = await res.json();
       if (!res.ok) {
         throw new InternalServerErrorException(
-          data?.message || `Bid service responded with status ${res.status}`,
+          typeof data === 'object' && data !== null && 'message' in data
+            ? (data as { message: string }).message
+            : `Bid service responded with status ${res.status}`,
         );
       }
 
@@ -93,17 +97,90 @@ export class BidProxyService {
     )}`;
 
     try {
-      const res = await (global as any).fetch(url, {
+      const res = await (global as { fetch: typeof fetch }).fetch(url, {
         method: 'GET',
         headers: {
           ...(authHeader ? { Authorization: authHeader } : {}),
         },
       });
 
-      const data = await res.json();
+      const data: unknown = await res.json();
       if (!res.ok) {
         throw new InternalServerErrorException(
-          data?.message || `Bid service responded with status ${res.status}`,
+          typeof data === 'object' && data !== null && 'message' in data
+            ? (data as { message?: string }).message
+            : `Bid service responded with status ${res.status}`,
+        );
+      }
+
+      return data;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `Failed to call bid service: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  async createJob(dto: any, apiKey?: string): Promise<unknown> {
+    const base = this.getBaseUrl();
+    const url = `${base}/api/v1/jobs`;
+
+    try {
+      if (typeof global.fetch !== 'function') {
+        throw new InternalServerErrorException(
+          'Fetch API not available in global scope',
+        );
+      }
+      const res = await global.fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(apiKey ? { 'x-api-key': apiKey } : {}),
+        },
+        body: JSON.stringify(dto),
+      });
+
+      const data: unknown = await res.json();
+      if (!res.ok) {
+        throw new InternalServerErrorException(
+          typeof data === 'object' && data !== null && 'message' in data
+            ? (data as { message?: string }).message
+            : `Bid service responded with status ${res.status}`,
+        );
+      }
+
+      return data;
+    } catch (err) {
+      throw new InternalServerErrorException(
+        `Failed to call bid service: ${(err as Error).message}`,
+      );
+    }
+  }
+
+  async placeBidRemote(
+    jobId: string,
+    dto: any,
+    apiKey?: string,
+  ): Promise<unknown> {
+    const base = this.getBaseUrl();
+    const url = `${base}/api/v1/jobs/${encodeURIComponent(jobId)}/bid`;
+
+    try {
+      const res = await (global as { fetch: typeof fetch }).fetch(url, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          ...(apiKey ? { 'x-api-key': apiKey } : {}),
+        },
+        body: JSON.stringify(dto),
+      });
+
+      const data: unknown = await res.json();
+      if (!res.ok) {
+        throw new InternalServerErrorException(
+          typeof data === 'object' && data !== null && 'message' in data
+            ? (data as { message?: string }).message
+            : `Bid service responded with status ${res.status}`,
         );
       }
 
