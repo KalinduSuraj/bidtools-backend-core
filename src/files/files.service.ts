@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Injectable,
+  BadRequestException,
+  InternalServerErrorException,
+  Logger,
+} from '@nestjs/common';
 import {
   S3Client,
   PutObjectCommand,
   GetObjectCommand,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { createReadStream } from 'fs';
 
 @Injectable()
 export class FilesService {
@@ -15,17 +21,40 @@ export class FilesService {
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || '',
     },
   });
+  private readonly logger = new Logger(FilesService.name);
 
   async uploadFile(file: Express.Multer.File) {
+    if (!file) {
+      throw new BadRequestException('No file provided');
+    }
+
+    // Support both memoryStorage (file.buffer) and diskStorage (file.path)
+    const body: Buffer | NodeJS.ReadableStream | undefined =
+      file.buffer ?? (file.path ? createReadStream(file.path) : undefined);
+
+    if (!body) {
+      throw new BadRequestException('File data not available');
+    }
+
     const command = new PutObjectCommand({
       Bucket: process.env.AWS_BUCKET_NAME,
       Key: file.originalname,
-      Body: file.buffer,
+      Body: body,
       ContentType: file.mimetype,
     });
 
-    await this.s3.send(command);
-    return { key: file.originalname };
+    try {
+      await this.s3.send(command);
+      return { key: file.originalname };
+    } catch (err: any) {
+      this.logger.error(
+        'S3 upload failed',
+        typeof err === 'object' && err !== null && 'stack' in err
+          ? (err as { stack?: string }).stack
+          : err,
+      );
+      throw new InternalServerErrorException('Failed to upload file to S3');
+    }
   }
 
   async getFileUrl(key: string): Promise<string> {

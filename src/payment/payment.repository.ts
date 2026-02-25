@@ -90,4 +90,3 @@ export class PaymentRepository {
     await this.db.client.send(command);
   }
 }
-``;

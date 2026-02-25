@@ -102,8 +102,12 @@ export class PaymentService {
     return updatedPayment;
   }
 
-  async processNotification(data: any) {
-    console.log(`[Notify] Processing Order ID: ${data.order_id}`);
+  async processNotification(data: {
+    order_id?: string;
+    status_code?: string;
+    [key: string]: any;
+  }) {
+    console.log(`[Notify] Processing Order ID: ${data?.order_id}`);
 
     const isValid = this.gatewayProvider.validatePayment(data);
 
@@ -112,8 +116,8 @@ export class PaymentService {
       throw new BadRequestException('Invalid Signature');
     }
 
-    const paymentId = data.order_id;
-    const statusCode = data.status_code;
+    const paymentId = data?.order_id ?? '';
+    const statusCode = data?.status_code ?? '';
 
     const payment = await this.paymentRepository.getPaymentById(paymentId);
     if (!payment) {
