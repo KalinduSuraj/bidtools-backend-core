@@ -4,7 +4,7 @@ import { DynamoDBDocumentClient } from '@aws-sdk/lib-dynamodb';
 
 @Injectable()
 export class DynomodbService {
-    public readonly client: DynamoDBDocumentClient;
+  public readonly client: DynamoDBDocumentClient;
 
   constructor() {
     const client = new DynamoDBClient({

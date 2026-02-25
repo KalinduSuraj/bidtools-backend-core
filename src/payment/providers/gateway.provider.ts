@@ -3,8 +3,22 @@ import * as crypto from 'crypto';
 
 @Injectable()
 export class GatewayProvider {
-  private merchantId = process.env.PAYHERE_MERCHANT_ID!.trim();
-  private merchantSecret = process.env.PAYHERE_SECRET!.trim();
+  // private merchantId = process.env.PAYHERE_MERCHANT_ID!.trim();
+  // private merchantSecret = process.env.PAYHERE_SECRET!.trim();
+
+  private get merchantId(): string {
+    const id = process.env.PAYHERE_MERCHANT_ID;
+    if (!id)
+      throw new BadRequestException('PAYHERE_MERCHANT_ID is not configured');
+    return id.trim();
+  }
+
+  private get merchantSecret(): string {
+    const secret = process.env.PAYHERE_SECRET;
+    if (!secret)
+      throw new BadRequestException('PAYHERE_SECRET is not configured');
+    return secret.trim();
+  }
 
   generateHash(
     orderId: string,
@@ -58,8 +72,8 @@ export class GatewayProvider {
     console.log('Expected Hash (Local): ', localHash);
     console.log('--------------------------------------');
 
-    if(!md5sig) return false;
-    
+    if (!md5sig) return false;
+
     const bufferLocal = Buffer.from(localHash);
     const bufferRemote = Buffer.from(md5sig);
     return (

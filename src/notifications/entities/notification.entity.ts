@@ -4,4 +4,7 @@ export class Notification {
   message: string;
   is_read: boolean;
   created_at: string;
+  type?: string;
+  PK?: string;
+  SK?: string;
 }

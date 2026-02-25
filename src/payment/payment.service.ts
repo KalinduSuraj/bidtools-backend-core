@@ -40,7 +40,7 @@ export class PaymentService {
       amount,
       currency || 'LKR',
     );
-    console.log(`hash => ${hash}`)
+    console.log(`hash => ${hash}`);
     const payhereUrl = 'https://sandbox.payhere.lk/pay/checkout';
 
     const redirectHtml = `
