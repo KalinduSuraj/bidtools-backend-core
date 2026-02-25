@@ -46,13 +46,8 @@ export class FilesService {
     try {
       await this.s3.send(command);
       return { key: file.originalname };
-    } catch (err: any) {
-      this.logger.error(
-        'S3 upload failed',
-        typeof err === 'object' && err !== null && 'stack' in err
-          ? (err as { stack?: string }).stack
-          : err,
-      );
+    } catch (error) {
+      console.log(error); // ← IMPORTANT
       throw new InternalServerErrorException('Failed to upload file to S3');
     }
   }
